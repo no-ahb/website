@@ -1,0 +1,252 @@
+---
+import Base from '../../layouts/Base.astro';
+import AudioPlayer from '../../components/AudioPlayer.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const works = await getCollection('works', ({ data }) => !data.draft);
+  return works.map((work) => ({
+    params: { slug: work.id },
+    props: { work },
+  }));
+}
+
+import { asset } from '../../lib/asset';
+
+/** Switch to privacy-enhanced embed domain */
+function privacyEmbed(url: string): string {
+  return url.replace('www.youtube.com', 'www.youtube-nocookie.com');
+}
+
+/** Extract YouTube ID from an /embed/ URL; '' if not YouTube. */
+function youtubeId(url: string): string {
+  const m = url.match(/\/embed\/([^/?&]+)/);
+  return m ? m[1] : '';
+}
+
+const { work } = Astro.props;
+const { Content } = await render(work);
+const siteUrl = Astro.site?.origin ?? 'https://noahberrie.com';
+
+const workImage = work.data.thumbnail || work.data.images[0];
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "VisualArtwork",
+  "name": work.data.title,
+  "creator": {
+    "@type": "Person",
+    "name": "Noah Berrie",
+    "url": siteUrl
+  },
+  "dateCreated": work.data.year,
+  "description": work.data.summary,
+  "artMedium": work.data.medium,
+  "artform": "Sound Installation",
+  "url": `${siteUrl}/works/${work.id}`,
+  ...(workImage && { "image": `${siteUrl}${workImage}` }),
+};
+---
+
+<Base
+  title={work.data.title}
+  description={work.data.summary}
+  path={`/works/${work.id}`}
+  image={work.data.thumbnail || work.data.images[0]}
+  type="article"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+
+  <article class="work-detail">
+    <!-- Left sidebar: title + meta + counter, fixed in nav column -->
+    <div class="work-detail-sidebar">
+      <h1 class="work-detail-title">{work.data.title}</h1>
+      <div class="work-detail-medium">{work.data.medium}</div>
+      <div class="work-detail-year">{work.data.year}</div>
+      {work.data.images.length > 1 && (
+        <div class="gallery-counter" role="status" aria-live="polite">1 / {work.data.images.length}</div>
+      )}
+    </div>
+
+    <!-- Right content: gallery + video + text -->
+    <div class="work-detail-content">
+      {work.data.images.length > 0 ? (
+        <div class="work-scroll-wrap" data-image-count={work.data.images.length}>
+          <div class="work-scroll-gallery">
+            <div class="work-scroll-track">
+              {work.data.images.map((img, i) => (
+                <img
+                  src={asset(img)}
+                  alt={i === 0
+                    ? `${work.data.title} by Noah Berrie — ${work.data.medium}`
+                    : `${work.data.title} — documentation image ${i + 1}`}
+                  loading={i === 0 ? "eager" : "lazy"}
+                  fetchpriority={i === 0 ? "high" : undefined}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : work.data.thumbnail && !work.data.video && work.data.images.length > 0 ? (
+        <div class="work-scroll-wrap" data-image-count="1">
+          <div class="work-scroll-gallery">
+            <div class="work-scroll-track">
+              <img
+                src={asset(work.data.thumbnail)}
+                alt={`${work.data.title} by Noah Berrie — ${work.data.medium}`}
+              />
+            </div>
+          </div>
+        </div>
+      ) : !work.data.video && !work.data.bandcamp ? (
+        <div class="placeholder" style="margin-top: 2rem;">
+          Documentation images to be added
+        </div>
+      ) : null}
+
+      {work.data.audioFile && (
+        <AudioPlayer src={work.data.audioFile} title={work.data.title} />
+      )}
+      {work.data.audioNote && (
+        <p class="audio-note">{work.data.audioNote}</p>
+      )}
+
+      <div class="work-detail-lower">
+        <div class="work-detail-body">
+          <Content />
+          {work.data.scorePdf && (
+            <a
+              class="work-score-link"
+              href={asset(work.data.scorePdf)}
+              download
+              data-umami-event="score-download"
+              data-umami-event-work={work.data.title}
+            >
+              download score (PDF) ↗
+            </a>
+          )}
+        </div>
+
+        {work.data.audioFiles.length > 0 && (
+          <div class="audio-files-block">
+            {work.data.audioFiles.map((af, i) => (
+              <div class="audio-file-entry">
+                <AudioPlayer src={af.src} title={`${work.data.title} — ${i + 1}`} />
+                {af.note && <p class="audio-note">{af.note}</p>}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {work.data.video && (
+          <div class="work-video">
+            {youtubeId(work.data.video) ? (
+              <button
+                class="yt-facade"
+                type="button"
+                data-embed-src={`${privacyEmbed(work.data.video)}?autoplay=1&rel=0&modestbranding=1`}
+                style={workImage ? `background-image: url(${asset(workImage)})` : undefined}
+                aria-label={`Play ${work.data.title} video`}
+                data-umami-event="video-play"
+                data-umami-event-work={work.data.title}
+              >
+                <span class="yt-play" aria-hidden="true">
+                  <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+                    <circle cx="36" cy="36" r="34" fill="rgba(0,0,0,0.55)" stroke="rgba(255,255,255,0.9)" stroke-width="1.25"/>
+                    <polygon points="29,24 51,36 29,48" fill="rgba(255,255,255,0.95)"/>
+                  </svg>
+                </span>
+              </button>
+            ) : (
+              <iframe
+                src={privacyEmbed(work.data.video)}
+                allow="autoplay; fullscreen; picture-in-picture; gyroscope; accelerometer"
+                allowfullscreen
+                loading="lazy"
+                title={`${work.data.title} — video`}
+              ></iframe>
+            )}
+          </div>
+        )}
+
+        {work.data.videosBelow.length > 0 && (
+          <div class="work-videos-below">
+            {work.data.videosBelow.map((v, i) => (
+              <div class="work-video">
+                {v.type === 'youtube' && youtubeId(v.url) ? (
+                  <button
+                    class="yt-facade"
+                    type="button"
+                    data-embed-src={`${privacyEmbed(v.url)}?autoplay=1&rel=0&modestbranding=1`}
+                    style={workImage ? `background-image: url(${asset(workImage)})` : undefined}
+                    aria-label={`Play ${work.data.title} video ${i + 1}`}
+                    data-umami-event="video-play"
+                    data-umami-event-work={work.data.title}
+                  >
+                    <span class="yt-play" aria-hidden="true">
+                      <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+                        <circle cx="36" cy="36" r="34" fill="rgba(0,0,0,0.55)" stroke="rgba(255,255,255,0.9)" stroke-width="1.25"/>
+                        <polygon points="29,24 51,36 29,48" fill="rgba(255,255,255,0.95)"/>
+                      </svg>
+                    </span>
+                  </button>
+                ) : (
+                  <iframe
+                    src={privacyEmbed(v.url)}
+                    allow="autoplay; fullscreen; picture-in-picture; gyroscope; accelerometer"
+                    allowfullscreen
+                    loading="lazy"
+                    title={`${work.data.title} — video ${i + 1}`}
+                  ></iframe>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        <script is:inline>
+          document.querySelectorAll('.yt-facade').forEach((btn) => {
+            btn.addEventListener('click', () => {
+              const src = btn.getAttribute('data-embed-src');
+              if (!src) return;
+              const iframe = document.createElement('iframe');
+              iframe.src = src;
+              iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture; gyroscope; accelerometer');
+              iframe.setAttribute('allowfullscreen', '');
+              iframe.title = btn.getAttribute('aria-label') || '';
+              btn.replaceWith(iframe);
+            });
+          });
+        </script>
+
+        {work.data.bandcamp && (
+          <div class="bandcamp-embed">
+            <iframe
+              src={work.data.bandcamp}
+              title={`${work.data.title} on Bandcamp`}
+              style={`border: 0; width: 100%; height: ${work.data.bandcampHeight}px;`}
+              loading="lazy"
+              allow="autoplay"
+            ></iframe>
+          </div>
+        )}
+
+        {work.data.exhibitions.length > 0 && (
+          <div class="work-exhibition-block">
+            <div class="work-exhibition-rule"></div>
+            <p class="work-exhibition-inline">
+              {work.data.exhibitions.map((ex, i) => (
+                <span>
+                  {i > 0 && '; '}
+                  {ex.venue}, {ex.location}, {ex.year}{ex.note && ` (${ex.note})`}
+                </span>
+              ))}
+            </p>
+            {work.data.exhibitionDescription && (
+              <p class="work-exhibition-description">{work.data.exhibitionDescription}</p>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  </article>
+</Base>

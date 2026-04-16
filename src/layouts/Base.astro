@@ -1,0 +1,274 @@
+---
+import Nav from '../components/Nav.astro';
+import '../styles/main.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  path?: string;
+  image?: string;
+  type?: string;
+  showFooter?: boolean;
+}
+
+const {
+  title = 'Noah Berrie',
+  description = 'Sound artist working between installation, composition, and performance.',
+  path = Astro.url.pathname,
+  image = '/images/homepage/hero.jpg',
+  type = 'website',
+  showFooter = false,
+} = Astro.props;
+
+const fullTitle = path === '/' ? 'Noah Berrie' : `${title} — Noah Berrie`;
+const canonicalURL = new URL(path, Astro.site);
+const metaDesc = description.length > 155 ? description.slice(0, description.lastIndexOf(' ', 155)) + '.' : description;
+const ogImage = new URL(image, Astro.site);
+
+const now = new Date();
+const updated = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+
+const base = import.meta.env.BASE_URL;
+const navLinks = [
+  { href: `${base}info`, label: 'Info' },
+  { href: base, label: 'Works' },
+];
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="format-detection" content="telephone=no, date=no, email=no, address=no" />
+  <title>{fullTitle}</title>
+  <meta name="description" content={metaDesc} />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cloud.umami.is; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' blob:; frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://bandcamp.com https://*.bandcamp.com; connect-src 'self' https://cloud.umami.is https://api-gateway.umami.dev" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <link rel="canonical" href={canonicalURL} />
+
+  <meta property="og:type" content={type} />
+  <meta property="og:title" content={fullTitle} />
+  <meta property="og:description" content={metaDesc} />
+  <meta property="og:url" content={canonicalURL} />
+  <meta property="og:site_name" content="Noah Berrie" />
+  <meta property="og:image" content={ogImage} />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={fullTitle} />
+  <meta name="twitter:description" content={metaDesc} />
+  <meta name="twitter:image" content={ogImage} />
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Noah Berrie",
+    "url": Astro.site?.origin ?? "https://noahberrie.com",
+    "sameAs": [
+      "https://www.instagram.com/noahberrie/",
+      "https://noahberrie.bandcamp.com",
+    ],
+    "jobTitle": "Sound Artist",
+    "description": "Sound artist working between installation, composition, and performance.",
+    "alumniOf": [
+      { "@type": "CollegeOrUniversity", "name": "Stanford University", "department": "CCRMA" }
+    ],
+    "knowsAbout": ["sound art", "sound installation", "feedback systems", "electroacoustic music", "custom electronics", "instrument building", "multichannel audio", "self-oscillating strings"]
+  })} />
+
+  <link rel="icon" id="favicon" type="image/svg+xml" href={`${base}favicon.svg`} />
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="8d91b759-3a55-46f7-883c-1b36e6da9531"></script>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to content</a>
+  <div class="site-wrapper">
+    <!-- Mobile: simple top bar with name + links -->
+    <nav class="nav-mobile-bar" aria-label="Main navigation">
+      <a href={base} class="mobile-name">Noah Berrie</a>
+      <div class="mobile-links">
+        {navLinks.map((link) => (
+          <a
+            href={link.href}
+            aria-current={(link.label === 'Works' && (path === '/' || path === base)) || (link.label === 'Info' && (path.startsWith('/info') || path.startsWith(`${base}info`))) ? 'page' : undefined}
+          >
+            {link.label}
+          </a>
+        ))}
+      </div>
+    </nav>
+
+    <!-- Desktop: fixed sidebar -->
+    <Nav currentPath={path} />
+
+    <main id="main-content" class="site-main">
+      <slot />
+      {showFooter && (
+        <footer class="site-footer">
+          <p>Last updated {updated}</p>
+        </footer>
+      )}
+    </main>
+  </div>
+
+  <script>
+    // Scroll-driven horizontal gallery
+    const scrollWrap = document.querySelector<HTMLElement>('.work-scroll-wrap');
+    const scrollTrack = document.querySelector<HTMLElement>('.work-scroll-track');
+    const scrollGallery = document.querySelector<HTMLElement>('.work-scroll-gallery');
+
+    if (scrollWrap && scrollTrack && scrollGallery) {
+      let overflow = 0;
+      let scrollRange = 0;
+      let ticking = false;
+
+      function measure() {
+        const imgs = scrollTrack.querySelectorAll('img');
+        let totalWidth = 0;
+        imgs.forEach((img, i) => {
+          totalWidth += img.offsetWidth;
+          if (i < imgs.length - 1) totalWidth += 16;
+        });
+        overflow = totalWidth - scrollGallery.clientWidth;
+        if (overflow <= 0) {
+          scrollWrap.style.height = 'auto';
+          return;
+        }
+        // Only count content ABOVE the gallery for restOfPage,
+        // so content below doesn't eat into the scroll range
+        const contentAbove = scrollWrap.offsetTop;
+        const wrapHeight = Math.max(window.innerHeight, overflow + window.innerHeight - contentAbove);
+        scrollWrap.style.height = wrapHeight + 'px';
+        scrollRange = Math.max(1, scrollWrap.clientHeight - window.innerHeight);
+        update();
+      }
+
+      const counter = document.querySelector('.gallery-counter') as HTMLElement | null;
+      const imgEls = scrollTrack.querySelectorAll('img');
+      const totalImages = imgEls.length;
+
+      function updateCounter() {
+        if (!counter || totalImages <= 1) return;
+        const galleryCx = scrollGallery.getBoundingClientRect().left + scrollGallery.clientWidth / 2;
+        let current = 1;
+        imgEls.forEach((img, i) => {
+          const rect = img.getBoundingClientRect();
+          if (rect.left <= galleryCx && rect.right > galleryCx) current = i + 1;
+        });
+        counter.textContent = `${current} / ${totalImages}`;
+        // Hide counter when scrolled past gallery
+        const wrapBottom = scrollWrap.getBoundingClientRect().bottom;
+        counter.style.display = wrapBottom > 0 ? '' : 'none';
+      }
+
+      function update() {
+        if (scrollRange <= 0 || overflow <= 0) return;
+        const scrolled = -scrollWrap.getBoundingClientRect().top;
+        const progress = Math.max(0, Math.min(scrolled / scrollRange, 1));
+        scrollTrack.style.transform = `translateX(-${progress * overflow}px)`;
+        updateCounter();
+      }
+
+      window.addEventListener('scroll', () => {
+        if (!ticking) {
+          requestAnimationFrame(() => { update(); ticking = false; });
+          ticking = true;
+        }
+      }, { passive: true });
+
+      window.addEventListener('resize', measure, { passive: true });
+
+      // Mobile: update counter on native horizontal scroll
+      scrollGallery.addEventListener('scroll', () => {
+        updateCounter();
+      }, { passive: true });
+
+      // Init after images load
+      const imgs = scrollTrack.querySelectorAll('img');
+      let loaded = 0;
+      const total = imgs.length;
+      if (total === 0) { measure(); }
+      else {
+        const onLoad = () => { loaded++; if (loaded >= total) measure(); };
+        imgs.forEach(img => {
+          if (img.complete) onLoad();
+          else img.addEventListener('load', onLoad);
+        });
+      }
+    }
+  </script>
+  <script>
+    // Umami: track outbound link and mailto clicks
+    document.addEventListener('click', (e) => {
+      const link = (e.target as HTMLElement | null)?.closest?.('a');
+      if (!link) return;
+      const href = link.getAttribute('href') || '';
+      if (!href) return;
+      const umami = (window as any).umami;
+      if (!umami?.track) return;
+      if (href.startsWith('mailto:')) {
+        umami.track('mailto-click');
+        return;
+      }
+      if (/^https?:\/\//i.test(href)) {
+        try {
+          const url = new URL(href);
+          if (url.hostname !== location.hostname) {
+            umami.track('outbound-link', { url: href.slice(0, 200) });
+          }
+        } catch {}
+      }
+    }, { capture: true });
+  </script>
+  <script>
+    // Animated favicon: line ↔ squiggle
+    const faviconLink = document.getElementById('favicon') as HTMLLinkElement;
+    if (faviconLink) {
+      let prevUrl: string | null = null;
+      const update = () => {
+        const t = Date.now();
+
+        // Waveform functions: sine, triangle, square
+        const wave = [
+          (p: number) => Math.sin(p),
+          (p: number) => 2 * Math.abs(2 * (p / (Math.PI * 2) % 1) - 1) - 1,
+          (p: number) => Math.sin(p) >= 0 ? 1 : -1,
+        ];
+
+        // Cycle waveform each breath (every 10s)
+        const cycle = Math.floor(t / 10000) % 3;
+        const fn = wave[cycle];
+
+        // Cubic ease: lingers low, quick rise, lingers high, quick fall
+        const phase = (t % 10000) / 10000;
+        const half = phase < 0.5 ? phase * 2 : 2 - phase * 2;
+        const ease = half * half * (3 - 2 * half);
+        const amp = 0.3 + ease * 3.7;
+        let d = 'M 3,16';
+        for (let i = 1; i <= 20; i++) {
+          const x = 3 + i * 1.3;
+          const y = 16 + fn(i * 0.9 + t / 400) * amp;
+          d += ` L ${x.toFixed(1)},${y.toFixed(1)}`;
+        }
+
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+          <path d="${d}" stroke="#111" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        </svg>`;
+
+        if (prevUrl) URL.revokeObjectURL(prevUrl);
+        const blob = new Blob([svg], { type: 'image/svg+xml' });
+        prevUrl = URL.createObjectURL(blob);
+        faviconLink.href = prevUrl;
+      };
+      setInterval(update, 250);
+      update();
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+---
+import { getCollection } from 'astro:content';
+
+interface Props {
+  currentPath: string;
+}
+
+const { currentPath } = Astro.props;
+const base = import.meta.env.BASE_URL;
+const allWorks = await getCollection('works', ({ data }) => !data.draft);
+const sortedWorks = allWorks.sort((a, b) => (b.data.sortOrder ?? 0) - (a.data.sortOrder ?? 0));
+---
+
+<nav class="site-nav" aria-label="Main navigation">
+  <div>
+    <div class="nav-name nav-item">
+      <a href={base}>Noah Berrie</a>
+    </div>
+    <div class="nav-links">
+      <a
+        href={`${base}info`}
+        class="nav-item"
+        aria-current={currentPath.startsWith('/info') || currentPath.startsWith(`${base}info`) ? 'page' : undefined}
+      >
+        Info
+      </a>
+      <div class="nav-works-hover">
+        <a
+          href={base}
+          class="nav-item"
+          aria-current={currentPath === '/' || currentPath === base ? 'page' : undefined}
+        >
+          Works
+        </a>
+        <div class="nav-works-list">
+          {sortedWorks.map((work, i) => (
+            <a href={`${base}works/${work.id}`} style={`--i: ${i}`}>{work.data.title.toUpperCase()}</a>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+  {!currentPath.startsWith('/works') && !currentPath.startsWith(`${base}works`) && (
+    <div class="nav-contact">
+      <a href="#" class="email-link" data-u="studio" data-d="noahberrie.com"></a>
+      <div class="nav-contact-links">
+        <a href="https://www.instagram.com/noahberrie/" target="_blank" rel="noopener noreferrer">Instagram</a>
+        <span>|</span>
+        <a href="https://noahberrie.bandcamp.com" target="_blank" rel="noopener noreferrer">Bandcamp</a>
+      </div>
+    </div>
+  )}
+</nav>
+
+<script>
+  // Assemble obfuscated email links
+  document.querySelectorAll('.email-link').forEach(el => {
+    const u = (el as HTMLElement).dataset.u;
+    const d = (el as HTMLElement).dataset.d;
+    if (u && d) {
+      (el as HTMLAnchorElement).href = `mailto:${u}@${d}`;
+      el.textContent = `${u}@${d}`;
+    }
+  });
+
+  let lastHue = -1;
+  document.querySelectorAll('.nav-contact a').forEach(link => {
+    link.addEventListener('mouseenter', () => {
+      let hue = Math.floor(Math.random() * 360);
+      let tries = 0;
+      while (Math.abs(hue - lastHue) < 60 && tries++ < 10) hue = Math.floor(Math.random() * 360);
+      lastHue = hue;
+      (link as HTMLElement).style.background = `hsla(${hue}, 80%, 65%, 0.3)`;
+    });
+    link.addEventListener('mouseleave', () => {
+      (link as HTMLElement).style.background = '';
+    });
+  });
+</script>

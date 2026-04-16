@@ -1,0 +1,34 @@
+---
+import Base from '../layouts/Base.astro';
+import WorkCard from '../components/WorkCard.astro';
+import { getCollection } from 'astro:content';
+
+const allWorks = await getCollection('works', ({ data }) => !data.draft);
+
+// Sort all works by sortOrder descending (no year grouping)
+const sortedWorks = allWorks.sort((a, b) => (b.data.sortOrder ?? 0) - (a.data.sortOrder ?? 0));
+---
+
+<Base
+  title="Works"
+  description="Selected works by Noah Berrie — sound installations, compositions, performances, and instruments."
+  showFooter={false}
+>
+  <div class="works-page">
+    <h1 class="sr-only">Works by Noah Berrie</h1>
+    <div class="work-list">
+      {sortedWorks.map((work) => (
+        <WorkCard
+          slug={work.id}
+          title={work.data.title}
+          medium={work.data.medium}
+          year={work.data.year}
+          thumbnail={work.data.thumbnail}
+          thumbnailPosition={work.data.thumbnailPosition}
+          videoPreview={work.data.videoPreview}
+          description={work.data.summary}
+        />
+      ))}
+    </div>
+  </div>
+</Base>

@@ -1,0 +1,104 @@
+---
+interface Props {
+  slug: string;
+  title: string;
+  medium: string;
+  year: string;
+  thumbnail?: string;
+  thumbnailPosition?: string;
+  videoPreview?: string;
+  description?: string;
+}
+
+import { asset } from '../lib/asset';
+
+const { slug, title, medium, year, thumbnail, thumbnailPosition, videoPreview, description } = Astro.props;
+const base = import.meta.env.BASE_URL;
+
+const altText = `${title} by Noah Berrie — ${medium}, ${year}`;
+---
+
+<a href={`${base}works/${slug}`} class="work-card reveal" data-has-video={videoPreview ? 'true' : undefined}>
+  <div class="work-card-media">
+    {thumbnail ? (
+      <img src={thumbnail ? asset(thumbnail) : undefined} alt={altText} loading="lazy" style={thumbnailPosition ? `object-position: ${thumbnailPosition}` : undefined} />
+    ) : (
+      <div class="placeholder" role="img" aria-label={altText}>
+        {title}
+      </div>
+    )}
+    {videoPreview && (
+      <video
+        src={videoPreview}
+        muted
+        playsinline
+        preload="none"
+        aria-label={`Video preview of ${title}`}
+      />
+    )}
+    {videoPreview && (
+      <button
+        class="work-card-sound-toggle"
+        aria-label="Toggle sound"
+        data-muted="true"
+      >
+        <svg class="icon-muted" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+          <line x1="23" y1="9" x2="17" y2="15" />
+          <line x1="17" y1="9" x2="23" y2="15" />
+        </svg>
+        <svg class="icon-unmuted" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+        </svg>
+      </button>
+    )}
+  </div>
+  <div class="work-card-text">
+    <span class="work-card-title">{title}</span>
+    <span class="work-card-meta">{medium}, {year}</span>
+  </div>
+</a>
+
+<script>
+  const isMobile = 'ontouchstart' in window || window.matchMedia('(max-width: 768px)').matches;
+
+  if (!isMobile) {
+    document.querySelectorAll('.work-card[data-has-video]').forEach((card) => {
+      const video = card.querySelector('video') as HTMLVideoElement | null;
+      const soundBtn = card.querySelector('.work-card-sound-toggle') as HTMLButtonElement | null;
+      if (!video) return;
+
+      let hoverTimer: ReturnType<typeof setTimeout> | null = null;
+
+      card.addEventListener('mouseenter', () => {
+        hoverTimer = setTimeout(() => {
+          card.classList.add('video-active');
+          video.play().catch(() => {});
+        }, 600);
+      });
+
+      card.addEventListener('mouseleave', () => {
+        if (hoverTimer) { clearTimeout(hoverTimer); hoverTimer = null; }
+        card.classList.remove('video-active');
+        video.pause();
+        video.currentTime = 0;
+      });
+
+      video.addEventListener('ended', () => {
+        card.classList.remove('video-active');
+        video.currentTime = 0;
+      });
+
+      if (soundBtn) {
+        soundBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          video.muted = !video.muted;
+          soundBtn.setAttribute('data-muted', String(video.muted));
+        });
+      }
+    });
+  }
+</script>
