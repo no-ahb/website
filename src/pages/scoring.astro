@@ -1,0 +1,161 @@
+---
+import Base from '../layouts/Base.astro';
+import AudioPlayer from '../components/AudioPlayer.astro';
+
+const updated = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+---
+<!--
+  TBDs (resolve before sharing the URL):
+  - Yair Elazar Glotman / The Last House — confirm Noah's specific credit
+    line. Currently rendered as "Additional music." Page links to the
+    Twelve-String Resonator (/works/12-string-resonator) Noah built for
+    Yair's Funkhaus Berlin sessions.
+  - Aqualung idea_X selection — currently embedding idea_2 (44s). Other
+    options on hand: idea_1, idea_3.
+  - Empty "3." in source brief's second numbered list — confirm whether
+    a sixth credit was intended.
+  - Page is unlisted: noindex=true (Base layout) plus excluded from
+    sitemap via filter in astro.config.mjs. No server-side password gate.
+-->
+<Base
+  title="Scoring"
+  description="Selected scoring and sound design for film, advertising, and branded content by Noah Berrie."
+  path="/scoring"
+  showFooter={false}
+  noindex={true}
+>
+  <div class="scoring-page">
+    <h1 class="sr-only">Scoring — Noah Berrie</h1>
+
+    <div class="scoring-layout">
+      <aside class="scoring-intro">
+        <h2>Scoring</h2>
+        <p>Original scores for film, advertising, and branded content.</p>
+        <p>New York and London.</p>
+      </aside>
+
+      <div class="scoring-credits">
+
+        <article class="scoring-credit">
+          <header class="scoring-credit-header">
+            <span class="scoring-platform">Netflix</span>
+            <span class="scoring-year">Released August 7, 2026</span>
+            <h3 class="scoring-title">The Last House</h3>
+            <p class="scoring-meta">
+              <span>Dir. <a href="https://en.wikipedia.org/wiki/Louis_Leterrier" target="_blank" rel="noopener noreferrer">Louis Leterrier</a></span>
+              <span>Score: <a href="https://yairelazarglotman.com/" target="_blank" rel="noopener noreferrer">Yair Elazar Glotman</a></span>
+            </p>
+            <p class="scoring-role">Built the <a href="/works/12-string-resonator">Twelve-String Resonator</a> used in the score; played violin on the recording sessions at Funkhaus Berlin.</p>
+            <p class="scoring-festival">
+              A family of four sealed inside their home, working to survive against a looming threat outside. Cast: Greta Lee, Wagner Moura. Screenplay: Matthew Robinson.<br />
+              <em><a href="https://www.imdb.com/title/tt32268156/" target="_blank" rel="noopener noreferrer">IMDb</a> · <a href="https://filmmusicreporter.com/2026/04/28/yair-elazar-glotman-scoring-louis-leterriers-the-last-house/" target="_blank" rel="noopener noreferrer">Film Music Reporter (April 2026)</a></em>
+            </p>
+          </header>
+          <div class="scoring-poster">
+            <img src="/images/scoring/last-house-poster.png" alt="The Last House — campaign image" loading="lazy" />
+          </div>
+        </article>
+
+        <article class="scoring-credit">
+          <header class="scoring-credit-header">
+            <span class="scoring-platform">Tribeca 2026</span>
+            <span class="scoring-year">World Premiere June 5, 2026 · 95 min · Documentary Competition</span>
+            <h3 class="scoring-title">Jean-Michel</h3>
+            <p class="scoring-meta">
+              <span>Dir. <a href="https://www.imdb.com/name/nm10579136/" target="_blank" rel="noopener noreferrer">Quinn Whitney Wilson</a> &amp; <a href="https://www.imdb.com/name/nm3687782/" target="_blank" rel="noopener noreferrer">Viridiana Lieberman</a></span>
+              <span>Music supervision: <a href="https://jameswilliamblades.com/" target="_blank" rel="noopener noreferrer">James William Blades</a></span>
+              <span><a href="https://interludesounds.com/" target="_blank" rel="noopener noreferrer">Interlude</a></span>
+            </p>
+            <p class="scoring-role">Sound collages built from archival radio and field recordings of 1970s and 80s New York, tied directly to Basquiat's biography.</p>
+            <p class="scoring-festival">
+              Intimate portrait of Jean-Michel Basquiat told through his sisters Lisane and Jeanine. First Basquiat documentary approved by the artist's estate.<br />
+              <em><a href="https://tribecafilm.com/films/jean-michel-2026" target="_blank" rel="noopener noreferrer">Tribeca Film Festival 2026 (forthcoming)</a></em>
+            </p>
+          </header>
+          <div class="scoring-poster">
+            <img src="/images/scoring/basquiat-poster.jpg" alt="Jean-Michel — film still" loading="lazy" />
+          </div>
+          <div class="scoring-audio">
+            <div>
+              <AudioPlayer src="/audio/scoring-basquiat-1.mp3" title="Jean-Michel — score sample I" />
+              <p class="audio-note">Score sample I.</p>
+            </div>
+            <div>
+              <AudioPlayer src="/audio/scoring-basquiat-2.mp3" title="Jean-Michel — score sample II" />
+              <p class="audio-note">Score sample II.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="scoring-credit">
+          <header class="scoring-credit-header">
+            <span class="scoring-year">February 2026</span>
+            <h3 class="scoring-title">Berluti — Jour de Poche / Hero</h3>
+            <p class="scoring-meta">
+              <span>Dir. <a href="https://luccalutzky.com/" target="_blank" rel="noopener noreferrer">Lucca Lutzky</a></span>
+              <span>Berluti</span>
+            </p>
+            <p class="scoring-role">Composer, sound design — short ads for the Jour de Poche line.</p>
+            <p class="scoring-festival">
+              <em><a href="https://www.instagram.com/reels/DVniAqyj9zU/" target="_blank" rel="noopener noreferrer">View on Instagram</a></em>
+            </p>
+          </header>
+          <div class="scoring-shorts">
+            <div class="scoring-video">
+              <video controls playsinline preload="metadata">
+                <source src="/images/scoring/berluti-brown.mp4" type="video/mp4" />
+              </video>
+            </div>
+            <div class="scoring-video">
+              <video controls playsinline preload="metadata">
+                <source src="/images/scoring/berluti-blue.mp4" type="video/mp4" />
+              </video>
+            </div>
+          </div>
+        </article>
+
+        <article class="scoring-credit">
+          <header class="scoring-credit-header">
+            <span class="scoring-year">March 2025</span>
+            <h3 class="scoring-title">Come and Go, Home</h3>
+            <p class="scoring-meta">
+              <span>Dir. <a href="https://luccalutzky.com/" target="_blank" rel="noopener noreferrer">Lucca Lutzky</a></span>
+            </p>
+            <p class="scoring-role">Score, sound design, AI voice synthesis.</p>
+            <p class="scoring-festival">
+              <em>Possibly Sometime Tomorrow, Paris.</em>
+            </p>
+          </header>
+          <div class="scoring-video">
+            <video controls playsinline preload="metadata">
+              <source src="/images/scoring/come-and-go-home.mp4" type="video/mp4" />
+            </video>
+          </div>
+        </article>
+
+        <article class="scoring-credit">
+          <header class="scoring-credit-header">
+            <span class="scoring-year">2024–25</span>
+            <h3 class="scoring-title">Aqualung</h3>
+            <p class="scoring-meta">
+              <span>Dir. Saif Maqbool</span>
+              <span>NYU graduate short film</span>
+            </p>
+            <p class="scoring-role">Original score.</p>
+          </header>
+          <div class="scoring-video">
+            <video controls playsinline preload="metadata">
+              <source src="/images/scoring/aqualung.mp4" type="video/mp4" />
+            </video>
+          </div>
+        </article>
+
+      </div>
+    </div>
+
+    <footer class="scoring-footer">
+      <a href="#" class="email-link" data-u="studio" data-d="noahberrie.com"></a>
+      <span class="scoring-updated">Last updated {updated}</span>
+    </footer>
+  </div>
+</Base>
