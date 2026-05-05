@@ -18,10 +18,4 @@ exhibitions:
 draft: false
 ---
 
-Downstairs, two subwoofers emit sound that is almost imperceptible, generated from the Haus itself.
-
-The sound emerges from a recursive recording process. The silent gallery is recorded upstairs, played back through the subwoofers downstairs, and recorded again. After more than 40 successive iterations, the building's resonant frequencies begin to emerge as an unstable drone.
-
-What remains is less sound than physical presence. The vibration may be felt in the chest, in the floor beneath the feet, or subtly along the walls. Because the lower floor is acoustically open to the level above, these sub-frequencies travel through the building, creating sympathetic resonances and pressure zones between rooms.
-
-The installation is the exhibition's acoustic foundation. Visitors are invited to sit or lie on the carpeted floor nearby to experience the piece through vibration.
+Two subwoofers play a near infrasonic recording, generated from the Haus itself. The recording is derived from a recursive process: the sound of the silent gallery is played back through the subwoofers downstairs and recorded again. After more than 40 iterations the building's resonant frequencies emerge as an unstable drone of felt-more-than-heard pressure zones and vibrations.
