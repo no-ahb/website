@@ -77,11 +77,11 @@ const updated = new Date().toLocaleDateString('en-US', { year: 'numeric', month:
           </div>
           <div class="scoring-audio">
             <div>
-              <AudioPlayer src="/audio/scoring-basquiat-1.mp3" title="Jean-Michel — score sample I" />
+              <AudioPlayer src="/audio/scoring-basquiat-1.mp3" title="Jean-Michel — score sample I" work="Jean-Michel" clip="1" />
               <p class="audio-note">Score sample I.</p>
             </div>
             <div>
-              <AudioPlayer src="/audio/scoring-basquiat-2.mp3" title="Jean-Michel — score sample II" />
+              <AudioPlayer src="/audio/scoring-basquiat-2.mp3" title="Jean-Michel — score sample II" work="Jean-Michel" clip="2" />
               <p class="audio-note">Score sample II.</p>
             </div>
           </div>
@@ -101,12 +101,12 @@ const updated = new Date().toLocaleDateString('en-US', { year: 'numeric', month:
             </p>
           </header>
           <div class="scoring-shorts">
-            <div class="scoring-video">
+            <div class="scoring-video" data-work="Berluti — Jour de Poche" data-clip="brown">
               <video controls playsinline preload="metadata" poster="/images/scoring/berluti-brown-poster.jpg">
                 <source src="/images/scoring/berluti-brown.mp4" type="video/mp4" />
               </video>
             </div>
-            <div class="scoring-video">
+            <div class="scoring-video" data-work="Berluti — Jour de Poche" data-clip="blue">
               <video controls playsinline preload="metadata" poster="/images/scoring/berluti-blue-poster.jpg">
                 <source src="/images/scoring/berluti-blue.mp4" type="video/mp4" />
               </video>
@@ -126,7 +126,7 @@ const updated = new Date().toLocaleDateString('en-US', { year: 'numeric', month:
               <em>Possibly Sometime Tomorrow, Paris.</em>
             </p>
           </header>
-          <div class="scoring-video">
+          <div class="scoring-video" data-work="Come and Go, Home">
             <video controls playsinline preload="metadata" poster="/images/scoring/come-and-go-home-poster.jpg">
               <source src="/images/scoring/come-and-go-home.mp4" type="video/mp4" />
             </video>
@@ -143,7 +143,7 @@ const updated = new Date().toLocaleDateString('en-US', { year: 'numeric', month:
             </p>
             <p class="scoring-role">Original score.</p>
           </header>
-          <div class="scoring-video">
+          <div class="scoring-video" data-work="Aqualung">
             <video controls playsinline preload="metadata" poster="/images/scoring/aqualung-poster.jpg">
               <source src="/images/scoring/aqualung.mp4" type="video/mp4" />
             </video>
@@ -158,4 +158,48 @@ const updated = new Date().toLocaleDateString('en-US', { year: 'numeric', month:
       <span class="scoring-updated">Last updated {updated}</span>
     </footer>
   </div>
+
+  <script is:inline>
+    document.querySelectorAll('.scoring-video').forEach((wrap) => {
+      const video = wrap.querySelector('video');
+      if (!video) return;
+      const work = wrap.dataset.work || '';
+      const clip = wrap.dataset.clip || undefined;
+      const src = video.querySelector('source')?.src || '';
+
+      let startedAt = 0;
+      let totalMs = 0;
+      let playFired = false;
+      let endFired = false;
+
+      function markPlay() {
+        if (startedAt === 0) startedAt = Date.now();
+        if (!playFired) {
+          playFired = true;
+          window.umami?.track?.('video-play', { work, clip, src });
+        }
+      }
+      function markStop() {
+        if (startedAt !== 0) {
+          totalMs += Date.now() - startedAt;
+          startedAt = 0;
+        }
+      }
+      function fire(reason) {
+        if (endFired) return;
+        markStop();
+        if (totalMs < 3000) return;
+        endFired = true;
+        const dur = video.duration || 0;
+        const seconds = Math.round(totalMs / 1000);
+        const pct = dur ? Math.min(100, Math.round((totalMs / 1000 / dur) * 100)) : 0;
+        window.umami?.track?.('video-end', { work, clip, src, seconds, pct, reason });
+      }
+
+      video.addEventListener('play', markPlay);
+      video.addEventListener('pause', markStop);
+      video.addEventListener('ended', () => fire('ended'));
+      window.addEventListener('pagehide', () => fire('leave'), { once: true });
+    });
+  </script>
 </Base>

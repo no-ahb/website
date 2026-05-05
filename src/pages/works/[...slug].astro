@@ -109,7 +109,7 @@ const jsonLd = {
       ) : null}
 
       {work.data.audioFile && (
-        <AudioPlayer src={work.data.audioFile} title={work.data.title} />
+        <AudioPlayer src={work.data.audioFile} title={work.data.title} work={work.data.title} />
       )}
       {work.data.audioNote && (
         <p class="audio-note">{work.data.audioNote}</p>
@@ -135,7 +135,7 @@ const jsonLd = {
           <div class="audio-files-block">
             {work.data.audioFiles.map((af, i) => (
               <div class="audio-file-entry">
-                <AudioPlayer src={af.src} title={`${work.data.title} — ${i + 1}`} />
+                <AudioPlayer src={af.src} title={`${work.data.title} — ${i + 1}`} work={work.data.title} clip={String(i + 1)} />
                 {af.note && <p class="audio-note">{af.note}</p>}
               </div>
             ))}
@@ -244,7 +244,34 @@ const jsonLd = {
           </div>
         )}
 
-        <script is:inline>
+        <script is:inline define:vars={{ workTitle: work.data.title }}>
+          function trackVideoWatch(video, work, src) {
+            let startedAt = 0;
+            let totalMs = 0;
+            let fired = false;
+            function markPlay() { if (startedAt === 0) startedAt = Date.now(); }
+            function markStop() {
+              if (startedAt !== 0) {
+                totalMs += Date.now() - startedAt;
+                startedAt = 0;
+              }
+            }
+            function fire(reason) {
+              if (fired) return;
+              markStop();
+              if (totalMs < 3000) return;
+              fired = true;
+              const dur = video.duration || 0;
+              const seconds = Math.round(totalMs / 1000);
+              const pct = dur ? Math.min(100, Math.round((totalMs / 1000 / dur) * 100)) : 0;
+              window.umami?.track?.('video-end', { work, src, seconds, pct, reason });
+            }
+            video.addEventListener('play', markPlay);
+            video.addEventListener('pause', markStop);
+            video.addEventListener('ended', () => fire('ended'));
+            window.addEventListener('pagehide', () => fire('leave'), { once: true });
+          }
+
           document.querySelectorAll('.video-facade').forEach((btn) => {
             btn.addEventListener('click', () => {
               const local = btn.getAttribute('data-local-src');
@@ -259,6 +286,7 @@ const jsonLd = {
                 v.title = btn.getAttribute('aria-label') || '';
                 btn.replaceWith(v);
                 v.play?.().catch(() => {});
+                trackVideoWatch(v, workTitle, local);
               } else if (yt) {
                 const iframe = document.createElement('iframe');
                 iframe.src = yt;

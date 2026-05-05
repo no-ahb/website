@@ -2,6 +2,8 @@
 interface Props {
   src: string;
   title: string;
+  work?: string;
+  clip?: string;
 }
 
 import { asset } from '../lib/asset';
@@ -9,7 +11,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-const { src, title } = Astro.props;
+const { src, title, work, clip } = Astro.props;
 
 function fmtDuration(secs: number): string {
   if (!isFinite(secs) || secs <= 0) return '0:00';
@@ -32,7 +34,7 @@ try {
 } catch {}
 ---
 
-<div class="audio-player" data-src={asset(src)} data-title={title} data-duration={preDuration}>
+<div class="audio-player" data-src={asset(src)} data-title={title} data-work={work || title} data-clip={clip} data-duration={preDuration}>
   <button class="audio-player-play" aria-label="Play">
     <svg class="icon-play" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
       <polygon points="6 3 20 12 6 21 6 3" />
@@ -170,6 +172,8 @@ try {
     }
 
     const title = player.dataset.title || '';
+    const work = player.dataset.work || title;
+    const clip = player.dataset.clip || undefined;
     let trackedPlay = false;
     let playStartedAt = 0;
     let totalMs = 0;
@@ -190,7 +194,7 @@ try {
       const dur = audio?.duration || 0;
       const seconds = Math.round(totalMs / 1000);
       const pct = dur ? Math.min(100, Math.round((totalMs / 1000 / dur) * 100)) : 0;
-      (window as any).umami?.track?.('audio-end', { title, seconds, pct, reason });
+      (window as any).umami?.track?.('audio-end', { work, clip, title, seconds, pct, reason });
     }
     window.addEventListener('pagehide', () => fireDuration('leave'));
 
@@ -201,7 +205,7 @@ try {
           player.classList.add('playing');
           if (!trackedPlay) {
             trackedPlay = true;
-            (window as any).umami?.track?.('audio-play', { title });
+            (window as any).umami?.track?.('audio-play', { work, clip, title });
           }
           markPlay();
           tick();
