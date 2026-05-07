@@ -4,6 +4,7 @@ import sitemap from '@astrojs/sitemap';
 export default defineConfig({
   site: 'https://noahberrie.com',
   output: 'static',
+  trailingSlash: 'always',
   integrations: [
     sitemap({
       filter: (page) => !page.includes('/scoring'),

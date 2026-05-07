@@ -47,7 +47,7 @@ const jsonLd = {
   "description": work.data.summary,
   "artMedium": work.data.medium,
   "artform": "Sound Installation",
-  "url": `${siteUrl}/works/${work.id}`,
+  "url": `${siteUrl}/works/${work.id}/`,
   ...(workImage && { "image": `${siteUrl}${workImage}` }),
 };
 ---
@@ -55,7 +55,7 @@ const jsonLd = {
 <Base
   title={work.data.title}
   description={work.data.summary}
-  path={`/works/${work.id}`}
+  path={`/works/${work.id}/`}
   image={work.data.thumbnail || work.data.images[0]}
   type="article"
 >

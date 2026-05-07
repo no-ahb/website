@@ -18,7 +18,7 @@ const sortedWorks = allWorks.sort((a, b) => (b.data.sortOrder ?? 0) - (a.data.so
     </div>
     <div class="nav-links">
       <a
-        href={`${base}info`}
+        href={`${base}info/`}
         class="nav-item"
         aria-current={currentPath.startsWith('/info') || currentPath.startsWith(`${base}info`) ? 'page' : undefined}
       >
@@ -34,7 +34,7 @@ const sortedWorks = allWorks.sort((a, b) => (b.data.sortOrder ?? 0) - (a.data.so
         </a>
         <div class="nav-works-list">
           {sortedWorks.map((work, i) => (
-            <a href={`${base}works/${work.id}`} style={`--i: ${i}`}>{work.data.title.toUpperCase()}</a>
+            <a href={`${base}works/${work.id}/`} style={`--i: ${i}`}>{work.data.title.toUpperCase()}</a>
           ))}
         </div>
       </div>

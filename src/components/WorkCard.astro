@@ -18,7 +18,7 @@ const base = import.meta.env.BASE_URL;
 const altText = `${title} by Noah Berrie — ${medium}, ${year}`;
 ---
 
-<a href={`${base}works/${slug}`} class="work-card reveal" data-has-video={videoPreview ? 'true' : undefined}>
+<a href={`${base}works/${slug}/`} class="work-card reveal" data-has-video={videoPreview ? 'true' : undefined}>
   <div class="work-card-media">
     {thumbnail ? (
       <img src={thumbnail ? asset(thumbnail) : undefined} alt={altText} loading="lazy" style={thumbnailPosition ? `object-position: ${thumbnailPosition}` : undefined} />
