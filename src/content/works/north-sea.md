@@ -5,6 +5,8 @@ medium: "wall-mounted sound installation"
 types: [installation]
 summary: "534 steel strings across three frames, playing back a 25-hour gyroscope recording from the North Sea. The ocean transposed into vibrating metal."
 sortOrder: 99
+video: "/videos/north-sea.mp4"
+videoPreview: "/images/north-sea/preview.mp4"
 thumbnail: "/images/north-sea/01-header.jpeg"
 images:
   - "/images/north-sea/01-header.jpeg"
