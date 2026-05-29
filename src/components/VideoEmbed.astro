@@ -1,0 +1,64 @@
+---
+import { asset } from '../lib/asset';
+
+interface Props {
+  url: string;
+  type?: string;
+  poster?: string;
+  label: string;
+  titleAttr: string;
+  workTitle: string;
+}
+
+const { url, type, poster, label, titleAttr, workTitle } = Astro.props;
+
+// The .video-facade play button is activated by the consuming page's inline
+// click handler (see src/pages/works/[...slug].astro); a page rendering
+// <VideoEmbed> must provide that handler, or the button is inert.
+
+/** Switch to privacy-enhanced embed domain */
+function privacyEmbed(u: string): string {
+  return u.replace('www.youtube.com', 'www.youtube-nocookie.com');
+}
+
+/** Extract YouTube ID from an /embed/ URL; '' if not YouTube. */
+function youtubeId(u: string): string {
+  const m = u.match(/\/embed\/([^/?&]+)/);
+  return m ? m[1] : '';
+}
+
+const isLocal = url.startsWith('/');
+const ytId = !isLocal && (type === undefined || type === 'youtube') ? youtubeId(url) : '';
+const bg = poster ? `background-image: url('${asset(poster)}')` : undefined;
+---
+
+<div class="work-video">
+  {isLocal || ytId ? (
+    <button
+      class="video-facade"
+      type="button"
+      data-local-src={isLocal ? asset(url) : undefined}
+      data-yt-src={ytId ? `${privacyEmbed(url)}?autoplay=1&rel=0&modestbranding=1` : undefined}
+      data-umami-event-video-id={ytId || undefined}
+      style={bg}
+      aria-label={label}
+      data-umami-event="video-play"
+      data-umami-event-work={workTitle}
+    >
+      <span class="video-play" aria-hidden="true">
+        <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+          <circle cx="36" cy="36" r="34" fill="rgba(0,0,0,0.55)" stroke="rgba(255,255,255,0.9)" stroke-width="1.25"/>
+          <polygon points="29,24 51,36 29,48" fill="rgba(255,255,255,0.95)"/>
+        </svg>
+      </span>
+    </button>
+  ) : (
+    <iframe
+      src={privacyEmbed(url)}
+      allow="autoplay; fullscreen; picture-in-picture; gyroscope; accelerometer"
+      allowfullscreen
+      loading="lazy"
+      title={titleAttr}
+    ></iframe>
+  )}
+</div>
