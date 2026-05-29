@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import AudioPlayer from '../../components/AudioPlayer.astro';
+import VideoEmbed from '../../components/VideoEmbed.astro';
 import { getCollection, render } from 'astro:content';
 
 export async function getStaticPaths() {
@@ -12,22 +13,6 @@ export async function getStaticPaths() {
 }
 
 import { asset } from '../../lib/asset';
-
-/** Switch to privacy-enhanced embed domain */
-function privacyEmbed(url: string): string {
-  return url.replace('www.youtube.com', 'www.youtube-nocookie.com');
-}
-
-/** Extract YouTube ID from an /embed/ URL; '' if not YouTube. */
-function youtubeId(url: string): string {
-  const m = url.match(/\/embed\/([^/?&]+)/);
-  return m ? m[1] : '';
-}
-
-/** True if the URL points at a local file (starts with /) rather than a third-party embed. */
-function isLocalVideo(url: string): boolean {
-  return url.startsWith('/');
-}
 
 const { work } = Astro.props;
 const { Content } = await render(work);
@@ -59,7 +44,7 @@ const jsonLd = {
   image={work.data.thumbnail || work.data.images[0]}
   type="article"
 >
-  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd).replace(/</g, '\\u003c')} />
 
   <article class="work-detail">
     <!-- Left sidebar: title + meta + counter, fixed in nav column -->
@@ -143,103 +128,27 @@ const jsonLd = {
         )}
 
         {work.data.video && (
-          <div class="work-video">
-            {isLocalVideo(work.data.video) ? (
-              <button
-                class="video-facade"
-                type="button"
-                data-local-src={asset(work.data.video)}
-                style={workImage ? `background-image: url(${asset(workImage)})` : undefined}
-                aria-label={`Play ${work.data.title} video`}
-                data-umami-event="video-play"
-                data-umami-event-work={work.data.title}
-              >
-                <span class="video-play" aria-hidden="true">
-                  <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
-                    <circle cx="36" cy="36" r="34" fill="rgba(0,0,0,0.55)" stroke="rgba(255,255,255,0.9)" stroke-width="1.25"/>
-                    <polygon points="29,24 51,36 29,48" fill="rgba(255,255,255,0.95)"/>
-                  </svg>
-                </span>
-              </button>
-            ) : youtubeId(work.data.video) ? (
-              <button
-                class="video-facade"
-                type="button"
-                data-yt-src={`${privacyEmbed(work.data.video)}?autoplay=1&rel=0&modestbranding=1`}
-                style={workImage ? `background-image: url(${asset(workImage)})` : undefined}
-                aria-label={`Play ${work.data.title} video`}
-                data-umami-event="video-play"
-                data-umami-event-work={work.data.title}
-                data-umami-event-video-id={youtubeId(work.data.video)}
-              >
-                <span class="video-play" aria-hidden="true">
-                  <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
-                    <circle cx="36" cy="36" r="34" fill="rgba(0,0,0,0.55)" stroke="rgba(255,255,255,0.9)" stroke-width="1.25"/>
-                    <polygon points="29,24 51,36 29,48" fill="rgba(255,255,255,0.95)"/>
-                  </svg>
-                </span>
-              </button>
-            ) : (
-              <iframe
-                src={privacyEmbed(work.data.video)}
-                allow="autoplay; fullscreen; picture-in-picture; gyroscope; accelerometer"
-                allowfullscreen
-                loading="lazy"
-                title={`${work.data.title} — video`}
-              ></iframe>
-            )}
-          </div>
+          <VideoEmbed
+            url={work.data.video}
+            type={work.data.videoType}
+            poster={workImage}
+            label={`Play ${work.data.title} video`}
+            titleAttr={`${work.data.title} — video`}
+            workTitle={work.data.title}
+          />
         )}
 
         {work.data.videosBelow.length > 0 && (
           <div class="work-videos-below">
             {work.data.videosBelow.map((v, i) => (
-              <div class="work-video">
-                {isLocalVideo(v.url) ? (
-                  <button
-                    class="video-facade"
-                    type="button"
-                    data-local-src={asset(v.url)}
-                    style={workImage ? `background-image: url(${asset(workImage)})` : undefined}
-                    aria-label={`Play ${work.data.title} video ${i + 1}`}
-                    data-umami-event="video-play"
-                    data-umami-event-work={work.data.title}
-                  >
-                    <span class="video-play" aria-hidden="true">
-                      <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
-                        <circle cx="36" cy="36" r="34" fill="rgba(0,0,0,0.55)" stroke="rgba(255,255,255,0.9)" stroke-width="1.25"/>
-                        <polygon points="29,24 51,36 29,48" fill="rgba(255,255,255,0.95)"/>
-                      </svg>
-                    </span>
-                  </button>
-                ) : v.type === 'youtube' && youtubeId(v.url) ? (
-                  <button
-                    class="video-facade"
-                    type="button"
-                    data-yt-src={`${privacyEmbed(v.url)}?autoplay=1&rel=0&modestbranding=1`}
-                    style={workImage ? `background-image: url(${asset(workImage)})` : undefined}
-                    aria-label={`Play ${work.data.title} video ${i + 1}`}
-                    data-umami-event="video-play"
-                    data-umami-event-work={work.data.title}
-                    data-umami-event-video-id={youtubeId(v.url)}
-                  >
-                    <span class="video-play" aria-hidden="true">
-                      <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
-                        <circle cx="36" cy="36" r="34" fill="rgba(0,0,0,0.55)" stroke="rgba(255,255,255,0.9)" stroke-width="1.25"/>
-                        <polygon points="29,24 51,36 29,48" fill="rgba(255,255,255,0.95)"/>
-                      </svg>
-                    </span>
-                  </button>
-                ) : (
-                  <iframe
-                    src={privacyEmbed(v.url)}
-                    allow="autoplay; fullscreen; picture-in-picture; gyroscope; accelerometer"
-                    allowfullscreen
-                    loading="lazy"
-                    title={`${work.data.title} — video ${i + 1}`}
-                  ></iframe>
-                )}
-              </div>
+              <VideoEmbed
+                url={v.url}
+                type={v.type}
+                poster={workImage}
+                label={`Play ${work.data.title} video ${i + 1}`}
+                titleAttr={`${work.data.title} — video ${i + 1}`}
+                workTitle={work.data.title}
+              />
             ))}
           </div>
         )}

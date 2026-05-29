@@ -46,7 +46,7 @@ const navLinks = [
   <title>{fullTitle}</title>
   <meta name="description" content={metaDesc} />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cloud.umami.is; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' blob:; frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://bandcamp.com https://*.bandcamp.com; connect-src 'self' https://cloud.umami.is https://api-gateway.umami.dev" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'unsafe-inline' https://cloud.umami.is; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' blob:; frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://bandcamp.com https://*.bandcamp.com; connect-src 'self' https://cloud.umami.is https://api-gateway.umami.dev" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -84,7 +84,7 @@ const navLinks = [
       { "@type": "CollegeOrUniversity", "name": "Stanford University", "department": "CCRMA" }
     ],
     "knowsAbout": ["sound art", "sound installation", "feedback systems", "electroacoustic music", "custom electronics", "instrument building", "multichannel audio", "self-oscillating strings"]
-  })} />
+  }).replace(/</g, '\\u003c')} />
 
   <link rel="icon" id="favicon" type="image/svg+xml" href={`${base}favicon.svg`} />
   <script defer src="https://cloud.umami.is/script.js" data-website-id="8d91b759-3a55-46f7-883c-1b36e6da9531"></script>
