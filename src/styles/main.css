@@ -375,14 +375,16 @@ hr {
   max-height: 92vh;
   margin-left: auto;
 }
+/* Gallery is a native horizontal scroller by default — the universal baseline for
+   Firefox, mobile/touch, and any browser without scroll-driven animation support. */
 .work-scroll-gallery {
-  position: sticky;
-  top: 0;
-  left: 0;
+  position: relative;
   width: 100%;
   max-width: 100%;
-  height: 100vh;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
   display: flex;
   align-items: center;
 }
@@ -391,7 +393,35 @@ hr {
   gap: 1rem;
   flex-shrink: 0;
   align-items: center;
-  will-change: transform;
+}
+
+/* Progressive enhancement: where scroll-driven animation is supported (Chrome/Edge/Safari),
+   desktop upgrades to a pinned, vertical-scroll-driven horizontal pan — pure CSS on the
+   compositor. A small JS shim sets --gallery-overflow so vertical scroll distance equals
+   horizontal travel. (Breakpoint kept in sync with the @media max-width:768px block below.) */
+@supports (animation-timeline: scroll()) {
+  @media (min-width: 769px) {
+    .work-scroll-wrap {
+      height: calc(100vh + var(--gallery-overflow, 0px));
+      view-timeline: --gallery block;
+    }
+    .work-scroll-gallery {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: hidden;
+      scroll-snap-type: none;
+    }
+    .work-scroll-track {
+      animation: gallery-pan linear both;
+      animation-timeline: --gallery;
+      animation-range: contain;
+      will-change: transform;
+    }
+    @keyframes gallery-pan {
+      to { transform: translateX(calc(-1 * var(--gallery-overflow, 0px))); }
+    }
+  }
 }
 /* Video embed — responsive 16:9 */
 .work-video {
@@ -446,6 +476,7 @@ hr {
   height: 92vh;
   width: auto;
   object-fit: contain;
+  scroll-snap-align: start;
 }
 
 /* Lower section: description + bandcamp + exhibitions */
@@ -934,24 +965,14 @@ hr {
   .cv-entry-dots .cv-title::after { content: ' | '; color: var(--color-meta); font-style: normal; }
   .cv-entry-dots .cv-venue { text-align: left; }
   .info-contact-mobile { display: block; }
-  /* On mobile: disable sticky scroll-driven gallery, use swipeable horizontal scroll */
-  .work-scroll-wrap { height: auto !important; margin-left: -20px; margin-right: -20px; }
+  /* Mobile: native horizontal scroll comes from the base rule; just edge-bleed + inset. */
+  .work-scroll-wrap { margin-left: -20px; margin-right: -20px; }
   .work-scroll-gallery {
-    position: relative;
-    height: auto;
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-    scroll-snap-type: x mandatory;
     padding-left: 20px;
     scroll-padding-left: 20px;
   }
-  .work-scroll-track {
-    transform: none !important;
-  }
   .work-scroll-track img {
     height: 75vh;
-    scroll-snap-align: start;
   }
   /* Scroll hint: small arrow indicator */
   .work-scroll-gallery::after {

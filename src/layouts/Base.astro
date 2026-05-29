@@ -121,89 +121,56 @@ const navLinks = [
   </div>
 
   <script>
-    // Scroll-driven horizontal gallery
-    const scrollWrap = document.querySelector<HTMLElement>('.work-scroll-wrap');
-    const scrollTrack = document.querySelector<HTMLElement>('.work-scroll-track');
-    const scrollGallery = document.querySelector<HTMLElement>('.work-scroll-gallery');
+    // Horizontal gallery. The pan itself is a CSS scroll-driven animation (see main.css,
+    // @supports animation-timeline) that runs on the compositor; non-supporting browsers
+    // and mobile fall back to native horizontal scroll. JS only (a) sets --gallery-overflow
+    // so the pinned wrapper's vertical scroll distance equals the horizontal travel, and
+    // (b) updates the image counter.
+    const wrap = document.querySelector<HTMLElement>('.work-scroll-wrap');
+    const track = document.querySelector<HTMLElement>('.work-scroll-track');
+    const gallery = document.querySelector<HTMLElement>('.work-scroll-gallery');
 
-    if (scrollWrap && scrollTrack && scrollGallery) {
-      let overflow = 0;
-      let scrollRange = 0;
-      let ticking = false;
-
-      function measure() {
-        const imgs = scrollTrack.querySelectorAll('img');
-        let totalWidth = 0;
-        imgs.forEach((img, i) => {
-          totalWidth += img.offsetWidth;
-          if (i < imgs.length - 1) totalWidth += 16;
-        });
-        overflow = totalWidth - scrollGallery.clientWidth;
-        if (overflow <= 0) {
-          scrollWrap.style.height = 'auto';
-          return;
-        }
-        // Only count content ABOVE the gallery for restOfPage,
-        // so content below doesn't eat into the scroll range
-        const contentAbove = scrollWrap.offsetTop;
-        const wrapHeight = Math.max(window.innerHeight, overflow + window.innerHeight - contentAbove);
-        scrollWrap.style.height = wrapHeight + 'px';
-        scrollRange = Math.max(1, scrollWrap.clientHeight - window.innerHeight);
-        update();
-      }
-
+    if (wrap && track && gallery) {
+      const imgs = [...track.querySelectorAll('img')];
       const counter = document.querySelector('.gallery-counter') as HTMLElement | null;
-      const imgEls = scrollTrack.querySelectorAll('img');
-      const totalImages = imgEls.length;
 
-      function updateCounter() {
-        if (!counter || totalImages <= 1) return;
-        const galleryCx = scrollGallery.getBoundingClientRect().left + scrollGallery.clientWidth / 2;
+      const measure = () => {
+        const overflow = Math.max(0, Math.round(track.scrollWidth - gallery.clientWidth));
+        wrap.style.setProperty('--gallery-overflow', `${overflow}px`);
+      };
+
+      const updateCounter = () => {
+        if (!counter || imgs.length <= 1) return;
+        // Hide the counter once the gallery has scrolled out of view above — it lives in
+        // the always-on-screen fixed sidebar and would otherwise linger on later sections.
+        counter.style.display = wrap.getBoundingClientRect().bottom > 0 ? '' : 'none';
+        const cx = gallery.getBoundingClientRect().left + gallery.clientWidth / 2;
         let current = 1;
-        imgEls.forEach((img, i) => {
-          const rect = img.getBoundingClientRect();
-          if (rect.left <= galleryCx && rect.right > galleryCx) current = i + 1;
-        });
-        counter.textContent = `${current} / ${totalImages}`;
-        // Hide counter when scrolled past gallery
-        const wrapBottom = scrollWrap.getBoundingClientRect().bottom;
-        counter.style.display = wrapBottom > 0 ? '' : 'none';
-      }
-
-      function update() {
-        if (scrollRange <= 0 || overflow <= 0) return;
-        const scrolled = -scrollWrap.getBoundingClientRect().top;
-        const progress = Math.max(0, Math.min(scrolled / scrollRange, 1));
-        scrollTrack.style.transform = `translateX(-${progress * overflow}px)`;
-        updateCounter();
-      }
-
-      window.addEventListener('scroll', () => {
-        if (!ticking) {
-          requestAnimationFrame(() => { update(); ticking = false; });
-          ticking = true;
+        for (let i = 0; i < imgs.length; i++) {
+          const r = imgs[i].getBoundingClientRect();
+          if (r.left <= cx && r.right > cx) current = i + 1;
         }
-      }, { passive: true });
+        counter.textContent = `${current} / ${imgs.length}`;
+      };
 
-      window.addEventListener('resize', measure, { passive: true });
+      const ro = new ResizeObserver(() => { measure(); updateCounter(); });
+      ro.observe(gallery);
+      ro.observe(track);
+      imgs.forEach((img) => {
+        if (!img.complete) img.addEventListener('load', () => { measure(); updateCounter(); }, { once: true });
+      });
 
-      // Mobile: update counter on native horizontal scroll
-      scrollGallery.addEventListener('scroll', () => {
-        updateCounter();
-      }, { passive: true });
+      let ticking = false;
+      const onScroll = () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(() => { updateCounter(); ticking = false; });
+      };
+      window.addEventListener('scroll', onScroll, { passive: true });   // pinned mode: page scroll pans the track
+      gallery.addEventListener('scroll', onScroll, { passive: true });  // native mode: gallery scrolls horizontally
 
-      // Init after images load
-      const imgs = scrollTrack.querySelectorAll('img');
-      let loaded = 0;
-      const total = imgs.length;
-      if (total === 0) { measure(); }
-      else {
-        const onLoad = () => { loaded++; if (loaded >= total) measure(); };
-        imgs.forEach(img => {
-          if (img.complete) onLoad();
-          else img.addEventListener('load', onLoad);
-        });
-      }
+      measure();
+      updateCounter();
     }
   </script>
   <script>
