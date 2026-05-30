@@ -198,8 +198,13 @@ a:focus { opacity: 1; }
   font-weight: 400;
   color: var(--color-title);
   text-transform: uppercase;
+  /* Yield first if the bar runs out of room so the nav links never clip. */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.mobile-links { display: flex; gap: 24px; margin-left: auto; }
+.mobile-links { display: flex; gap: 24px; margin-left: auto; flex-shrink: 0; }
 .mobile-links a {
   font-size: 1.15rem;
   color: var(--color-nav);
@@ -1027,6 +1032,9 @@ hr {
 @media (max-width: 480px) {
   .site-main { padding-left: 16px; padding-right: 16px; }
   .nav-mobile-bar { padding: 14px 16px; }
+  .mobile-name { font-size: 1.25rem; }
+  .mobile-links { gap: 16px; }
+  .mobile-links a { font-size: 1.05rem; }
 }
 
 @media print {
