@@ -35,8 +35,10 @@ const updated = new Date().toLocaleDateString('en-US', { year: 'numeric', month:
               <em><a href="https://www.imdb.com/title/tt32268156/" target="_blank" rel="noopener noreferrer">IMDb</a> · <a href="https://filmmusicreporter.com/2026/04/28/yair-elazar-glotman-scoring-louis-leterriers-the-last-house/" target="_blank" rel="noopener noreferrer">Film Music Reporter (April 2026)</a></em>
             </p>
           </header>
-          <div class="scoring-poster">
-            <img src="/images/scoring/last-house-poster.png" alt="The Last House — campaign image" loading="lazy" />
+          <div class="scoring-media">
+            <div class="scoring-poster">
+              <img src="/images/scoring/last-house-poster.png" alt="The Last House — campaign image" loading="lazy" />
+            </div>
           </div>
         </article>
 
@@ -56,17 +58,19 @@ const updated = new Date().toLocaleDateString('en-US', { year: 'numeric', month:
               <em><a href="https://tribecafilm.com/films/jean-michel-2026" target="_blank" rel="noopener noreferrer">Tribeca Film Festival 2026 (forthcoming)</a></em>
             </p>
           </header>
-          <div class="scoring-poster">
-            <img src="/images/scoring/basquiat-poster.jpg" alt="Jean-Michel — film still" loading="lazy" />
-          </div>
-          <div class="scoring-audio">
-            <div>
-              <AudioPlayer src="/audio/scoring-basquiat-1.mp3" title="Jean-Michel — score sample I" work="Jean-Michel" clip="1" />
-              <p class="audio-note">Score sample I.</p>
+          <div class="scoring-media">
+            <div class="scoring-poster">
+              <img src="/images/scoring/basquiat-poster.jpg" alt="Jean-Michel — film still" loading="lazy" />
             </div>
-            <div>
-              <AudioPlayer src="/audio/scoring-basquiat-2.mp3" title="Jean-Michel — score sample II" work="Jean-Michel" clip="2" />
-              <p class="audio-note">Score sample II.</p>
+            <div class="scoring-audio">
+              <div>
+                <AudioPlayer src="/audio/scoring-basquiat-1.mp3" title="Jean-Michel — score sample I" work="Jean-Michel" clip="1" />
+                <p class="audio-note">Score sample I.</p>
+              </div>
+              <div>
+                <AudioPlayer src="/audio/scoring-basquiat-2.mp3" title="Jean-Michel — score sample II" work="Jean-Michel" clip="2" />
+                <p class="audio-note">Score sample II.</p>
+              </div>
             </div>
           </div>
         </article>
@@ -84,16 +88,18 @@ const updated = new Date().toLocaleDateString('en-US', { year: 'numeric', month:
               <em><a href="https://www.instagram.com/reels/DVniAqyj9zU/" target="_blank" rel="noopener noreferrer">View on Instagram</a></em>
             </p>
           </header>
-          <div class="scoring-shorts">
-            <div class="scoring-video" data-work="Berluti — Jour de Poche" data-clip="brown">
-              <video controls playsinline preload="metadata" poster="/images/scoring/berluti-brown-poster.jpg">
-                <source src="/images/scoring/berluti-brown.mp4" type="video/mp4" />
-              </video>
-            </div>
-            <div class="scoring-video" data-work="Berluti — Jour de Poche" data-clip="blue">
-              <video controls playsinline preload="metadata" poster="/images/scoring/berluti-blue-poster.jpg">
-                <source src="/images/scoring/berluti-blue.mp4" type="video/mp4" />
-              </video>
+          <div class="scoring-media">
+            <div class="scoring-shorts">
+              <div class="scoring-video" data-work="Berluti — Jour de Poche" data-clip="brown">
+                <video controls playsinline preload="metadata" poster="/images/scoring/berluti-brown-poster.jpg">
+                  <source src="/images/scoring/berluti-brown.mp4" type="video/mp4" />
+                </video>
+              </div>
+              <div class="scoring-video" data-work="Berluti — Jour de Poche" data-clip="blue">
+                <video controls playsinline preload="metadata" poster="/images/scoring/berluti-blue-poster.jpg">
+                  <source src="/images/scoring/berluti-blue.mp4" type="video/mp4" />
+                </video>
+              </div>
             </div>
           </div>
         </article>
@@ -110,10 +116,12 @@ const updated = new Date().toLocaleDateString('en-US', { year: 'numeric', month:
               <em>Possibly Sometime Tomorrow, Paris.</em>
             </p>
           </header>
-          <div class="scoring-video" data-work="Come and Go, Home">
-            <video controls playsinline preload="metadata" poster="/images/scoring/come-and-go-home-poster.jpg">
-              <source src="/images/scoring/come-and-go-home.mp4" type="video/mp4" />
-            </video>
+          <div class="scoring-media">
+            <div class="scoring-video" data-work="Come and Go, Home">
+              <video controls playsinline preload="metadata" poster="/images/scoring/come-and-go-home-poster.jpg">
+                <source src="/images/scoring/come-and-go-home.mp4" type="video/mp4" />
+              </video>
+            </div>
           </div>
         </article>
 
@@ -127,10 +135,12 @@ const updated = new Date().toLocaleDateString('en-US', { year: 'numeric', month:
             </p>
             <p class="scoring-role">Original score.</p>
           </header>
-          <div class="scoring-video" data-work="Aqualung">
-            <video controls playsinline preload="metadata" poster="/images/scoring/aqualung-poster.jpg">
-              <source src="/images/scoring/aqualung.mp4" type="video/mp4" />
-            </video>
+          <div class="scoring-media">
+            <div class="scoring-video" data-work="Aqualung">
+              <video controls playsinline preload="metadata" poster="/images/scoring/aqualung-poster.jpg">
+                <source src="/images/scoring/aqualung.mp4" type="video/mp4" />
+              </video>
+            </div>
           </div>
         </article>
 

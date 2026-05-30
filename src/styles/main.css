@@ -764,6 +764,11 @@ hr {
   position: relative;
   margin: 0;
   padding-top: 3rem;
+  /* Two columns: credit text on the left, media on the right (mirrors the
+     bio's text/photo split). Collapses to a single column on mobile. */
+  display: flex;
+  gap: 3rem;
+  align-items: flex-start;
 }
 .scoring-credit + .scoring-credit { margin-top: 3rem; }
 .scoring-credit:not(:first-child)::before {
@@ -776,7 +781,18 @@ hr {
   background: var(--color-rule);
   pointer-events: none;
 }
-.scoring-credit-header { margin-bottom: 1.5rem; }
+.scoring-credit-header {
+  flex: 0 0 18rem;
+  min-width: 0;
+}
+/* Media column: posters, video, and audio stack on the right. */
+.scoring-media {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
 
 .scoring-video {
   position: relative;
@@ -854,7 +870,7 @@ hr {
 .scoring-festival a:hover { border-bottom-color: var(--color-text); }
 
 .scoring-poster {
-  margin-bottom: 1rem;
+  margin-bottom: 0;
 }
 .scoring-poster img {
   display: block;
@@ -982,6 +998,8 @@ hr {
   @keyframes hint-fade { to { opacity: 0; } }
   /* Scoring page mobile — full-width single column */
   .scoring-page { padding-right: 0; }
+  .scoring-credit { flex-direction: column; gap: 1.5rem; }
+  .scoring-credit-header { flex: none; }
   .scoring-credit:first-child { padding-top: 2rem; }
 }
 
