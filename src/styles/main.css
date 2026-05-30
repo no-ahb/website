@@ -8,6 +8,7 @@
   --color-rule: rgba(0, 0, 0, 0.85);
   --color-accent-info: #002FA7;
   --color-accent-works: #8B0000;
+  --color-accent-scoring: #006400;
   --color-surface: #f5f5f5;
   --font: 'Instrument Sans', -apple-system, 'Helvetica Neue', sans-serif;
   --nav-width: 18%;
@@ -123,7 +124,11 @@ a:focus { opacity: 1; }
   color: var(--color-accent-info);
   font-weight: 500;
 }
-.nav-links a[aria-current="page"]:not([href*="info"]) {
+.nav-links a[aria-current="page"][href*="scoring"] {
+  color: var(--color-accent-scoring);
+  font-weight: 500;
+}
+.nav-links a[aria-current="page"]:not([href*="info"]):not([href*="scoring"]) {
   color: var(--color-accent-works);
   font-weight: 500;
 }
@@ -193,8 +198,13 @@ a:focus { opacity: 1; }
   font-weight: 400;
   color: var(--color-title);
   text-transform: uppercase;
+  /* Yield first if the bar runs out of room so the nav links never clip. */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.mobile-links { display: flex; gap: 24px; margin-left: auto; }
+.mobile-links { display: flex; gap: 24px; margin-left: auto; flex-shrink: 0; }
 .mobile-links a {
   font-size: 1.15rem;
   color: var(--color-nav);
@@ -203,7 +213,11 @@ a:focus { opacity: 1; }
   color: var(--color-accent-info);
   font-weight: 700;
 }
-.mobile-links a[aria-current="page"]:not([href*="info"]) {
+.mobile-links a[aria-current="page"][href*="scoring"] {
+  color: var(--color-accent-scoring);
+  font-weight: 700;
+}
+.mobile-links a[aria-current="page"]:not([href*="info"]):not([href*="scoring"]) {
   color: var(--color-accent-works);
   font-weight: 700;
 }
@@ -1018,6 +1032,9 @@ hr {
 @media (max-width: 480px) {
   .site-main { padding-left: 16px; padding-right: 16px; }
   .nav-mobile-bar { padding: 14px 16px; }
+  .mobile-name { font-size: 1.25rem; }
+  .mobile-links { gap: 16px; }
+  .mobile-links a { font-size: 1.05rem; }
 }
 
 @media print {
