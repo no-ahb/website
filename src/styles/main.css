@@ -716,8 +716,10 @@ hr {
 /* -- Scoring page -- */
 
 .scoring-page {
-  /* editorial measure for the whole column — header band, credits, footer */
-  max-width: 38rem;
+  /* Match the info page's horizontal sizing so the header band, credit
+     dividers, and footer rule all span the full content width (the column
+     stops short of the right edge by the nav width, mirroring .info-page). */
+  padding-right: var(--nav-width);
 }
 
 /* Single editorial column: a header band (title + standfirst) above the
@@ -732,10 +734,14 @@ hr {
   padding-bottom: 3rem;
   border-bottom: 1px solid var(--color-rule);
 }
+/* Match the info page's section heading (e.g. "BIO") exactly — same size,
+   weight, tracking, and uppercase treatment — so the page header reads as
+   consistent with the other pages. */
 .scoring-header-title {
   font-size: 1.4rem;
-  font-weight: 500;
+  font-weight: 400;
   letter-spacing: 0.02em;
+  text-transform: uppercase;
   color: var(--color-title);
   margin: 0 0 0.6rem;
 }
@@ -975,7 +981,7 @@ hr {
   }
   @keyframes hint-fade { to { opacity: 0; } }
   /* Scoring page mobile — full-width single column */
-  .scoring-page { max-width: none; }
+  .scoring-page { padding-right: 0; }
   .scoring-credit:first-child { padding-top: 2rem; }
 }
 
