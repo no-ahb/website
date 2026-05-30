@@ -4,25 +4,11 @@ import AudioPlayer from '../components/AudioPlayer.astro';
 
 const updated = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
 ---
-<!--
-  TBDs (resolve before sharing the URL):
-  - Yair Elazar Glotman / The Last House — confirm Noah's specific credit
-    line. Currently rendered as "Additional music." Page links to the
-    Twelve-String Resonator (/works/12-string-resonator) Noah built for
-    Yair's Funkhaus Berlin sessions.
-  - Aqualung idea_X selection — currently embedding idea_2 (44s). Other
-    options on hand: idea_1, idea_3.
-  - Empty "3." in source brief's second numbered list — confirm whether
-    a sixth credit was intended.
-  - Page is unlisted: noindex=true (Base layout) plus excluded from
-    sitemap via filter in astro.config.mjs. No server-side password gate.
--->
 <Base
   title="Scoring"
   description="Selected scoring and sound design for film, advertising, and branded content by Noah Berrie."
   path="/scoring"
   showFooter={false}
-  noindex={true}
 >
   <div class="scoring-page">
     <h1 class="sr-only">Scoring — Noah Berrie</h1>
