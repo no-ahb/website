@@ -716,86 +716,59 @@ hr {
 /* -- Scoring page -- */
 
 .scoring-page {
-  padding-right: var(--nav-width);
+  /* editorial measure for the whole column — header band, credits, footer */
+  max-width: 38rem;
 }
 
+/* Single editorial column: a header band (title + standfirst) above the
+   credits list. Its top edge lines up with the "Noah Berrie" wordmark because
+   the nav and .site-main share the same 2rem top padding and nothing here adds
+   more — the header's first line is the first thing at that 2rem origin, and
+   the title inherits the body line-height just as .nav-name does. */
 .scoring-layout {
-  display: flex;
-  gap: 0;
-  align-items: flex-start;
-  padding: 2rem 0 3rem;
+  padding-bottom: 3rem;
 }
-.scoring-intro {
-  flex: 0 0 260px;
-  position: sticky;
-  top: 2rem;
-  padding-right: 4rem;
+.scoring-header {
+  padding-bottom: 3rem;
+  border-bottom: 1px solid var(--color-rule);
 }
-.scoring-intro h2 {
+.scoring-header-title {
   font-size: 1.4rem;
-  font-weight: 400;
+  font-weight: 500;
   letter-spacing: 0.02em;
   color: var(--color-title);
-  margin: 0 0 1rem;
+  margin: 0 0 0.6rem;
 }
-.scoring-intro p {
-  margin: 0 0 1rem;
-  line-height: 1.55;
+.scoring-standfirst {
+  margin: 0;
+  color: var(--color-text);
+  line-height: 1.5;
+  text-wrap: pretty;
 }
+.scoring-standfirst + .scoring-standfirst { margin-top: 0.15rem; }
 
 .scoring-credits {
-  position: relative;
-  flex: 1;
-  min-width: 0;
   display: flex;
   flex-direction: column;
-  border-left: 1px solid var(--color-rule);
-  padding-left: 4rem;
-}
-/* extend vertical column line up to viewport top
-   (covers .site-main padding-top 2rem + .scoring-layout padding-top 2rem) */
-.scoring-credits::before {
-  content: '';
-  position: absolute;
-  top: -4rem;
-  left: -1px;
-  width: 1px;
-  height: 4rem;
-  background: var(--color-rule);
-  pointer-events: none;
-}
-/* extend vertical column line down to bottom horizontal line (footer border-top).
-   covers .scoring-layout padding-bottom 3rem + .scoring-footer margin-top 4rem.
-   1px overshoot ensures clean intersection. */
-.scoring-credits::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: -1px;
-  width: 1px;
-  height: calc(7rem + 1px);
-  background: var(--color-rule);
-  pointer-events: none;
 }
 
+/* Divider rhythm: the ::before rule sits at the top of each credit, with 3rem
+   of margin above it and 3rem of padding below — centered in a 6rem gap. */
 .scoring-credit {
   position: relative;
   margin: 0;
-  padding-top: 4rem;
+  padding-top: 3rem;
 }
-.scoring-credit + .scoring-credit { margin-top: 4rem; }
+.scoring-credit + .scoring-credit { margin-top: 3rem; }
 .scoring-credit:not(:first-child)::before {
   content: '';
   position: absolute;
   top: 0;
-  left: -4rem;
-  width: 100vw;
+  left: 0;
+  width: 100%;
   height: 1px;
   background: var(--color-rule);
   pointer-events: none;
-}
-.scoring-credit:first-child {
-  padding-top: 0;
 }
 .scoring-credit-header { margin-bottom: 1.5rem; }
 
@@ -917,7 +890,7 @@ hr {
   position: absolute;
   top: 0;
   left: 0;
-  width: 100vw;
+  width: 100%;
   height: 1px;
   background: var(--color-rule);
   pointer-events: none;
@@ -1001,32 +974,9 @@ hr {
     animation: hint-fade 2s ease 1s forwards;
   }
   @keyframes hint-fade { to { opacity: 0; } }
-  /* Scoring page mobile */
-  .scoring-page { padding-right: 0; }
-  .scoring-layout {
-    flex-direction: column;
-    gap: 2rem;
-    padding-top: 1rem;
-  }
-  .scoring-intro {
-    flex: none;
-    position: static;
-    top: auto;
-    padding-right: 0;
-  }
-  .scoring-credits {
-    border-left: 0;
-    padding-left: 0;
-  }
-  .scoring-credits::before,
-  .scoring-credits::after { display: none; }
-  .scoring-footer::before { left: -20px; }
-  .scoring-credit { padding-top: 3rem; }
-  .scoring-credit + .scoring-credit { margin-top: 3rem; }
-  .scoring-credit:not(:first-child)::before {
-    left: -20px;
-    width: 100vw;
-  }
+  /* Scoring page mobile — full-width single column */
+  .scoring-page { max-width: none; }
+  .scoring-credit:first-child { padding-top: 2rem; }
 }
 
 @media (max-width: 480px) {
