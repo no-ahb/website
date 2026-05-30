@@ -24,6 +24,13 @@ const sortedWorks = allWorks.sort((a, b) => (b.data.sortOrder ?? 0) - (a.data.so
       >
         Info
       </a>
+      <a
+        href={`${base}scoring/`}
+        class="nav-item"
+        aria-current={currentPath.startsWith('/scoring') || currentPath.startsWith(`${base}scoring`) ? 'page' : undefined}
+      >
+        Scoring
+      </a>
       <div class="nav-works-hover">
         <a
           href={base}

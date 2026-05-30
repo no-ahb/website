@@ -35,9 +35,7 @@ export default defineConfig({
   output: 'static',
   trailingSlash: 'always',
   integrations: [
-    sitemap({
-      filter: (page) => !page.includes('/scoring'),
-    }),
+    sitemap(),
     stripHtmlComments(),
   ],
   build: {
