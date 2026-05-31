@@ -42,7 +42,9 @@
 }
 
 html {
-  font-size: 13px;
+  /* 13px at the default 16px root, but as a percentage it scales with the
+     visitor's browser font-size preference (a fixed px root would ignore it). */
+  font-size: 81.25%;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   /* no scroll-behavior: smooth — conflicts with scroll gallery */
