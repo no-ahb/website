@@ -716,8 +716,10 @@ hr {
 /* -- Scoring page -- */
 
 .scoring-page {
-  /* editorial measure for the whole column — header band, credits, footer */
-  max-width: 38rem;
+  /* Match the info page's horizontal sizing so the header band, credit
+     dividers, and footer rule all span the full content width (the column
+     stops short of the right edge by the nav width, mirroring .info-page). */
+  padding-right: var(--nav-width);
 }
 
 /* Single editorial column: a header band (title + standfirst) above the
@@ -732,10 +734,14 @@ hr {
   padding-bottom: 3rem;
   border-bottom: 1px solid var(--color-rule);
 }
+/* Match the info page's section heading (e.g. "BIO") exactly — same size,
+   weight, tracking, and uppercase treatment — so the page header reads as
+   consistent with the other pages. */
 .scoring-header-title {
   font-size: 1.4rem;
-  font-weight: 500;
+  font-weight: 400;
   letter-spacing: 0.02em;
+  text-transform: uppercase;
   color: var(--color-title);
   margin: 0 0 0.6rem;
 }
@@ -758,6 +764,11 @@ hr {
   position: relative;
   margin: 0;
   padding-top: 3rem;
+  /* Two columns: credit text on the left, media on the right (mirrors the
+     bio's text/photo split). Collapses to a single column on mobile. */
+  display: flex;
+  gap: 3rem;
+  align-items: flex-start;
 }
 .scoring-credit + .scoring-credit { margin-top: 3rem; }
 .scoring-credit:not(:first-child)::before {
@@ -770,7 +781,22 @@ hr {
   background: var(--color-rule);
   pointer-events: none;
 }
-.scoring-credit-header { margin-bottom: 1.5rem; }
+.scoring-credit-header {
+  /* Preferred 18rem so the text keeps a tidy measure on wide screens, but
+     allowed to shrink with the media column on narrow desktop widths. */
+  flex: 0 1 18rem;
+  min-width: 0;
+}
+/* Media column: posters, video, and audio stack on the right. Given a real
+   basis so it shrinks alongside the text instead of collapsing when space is
+   tight just above the mobile breakpoint. */
+.scoring-media {
+  flex: 1 1 20rem;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
 
 .scoring-video {
   position: relative;
@@ -847,9 +873,6 @@ hr {
 }
 .scoring-festival a:hover { border-bottom-color: var(--color-text); }
 
-.scoring-poster {
-  margin-bottom: 1rem;
-}
 .scoring-poster img {
   display: block;
   width: 100%;
@@ -975,7 +998,9 @@ hr {
   }
   @keyframes hint-fade { to { opacity: 0; } }
   /* Scoring page mobile — full-width single column */
-  .scoring-page { max-width: none; }
+  .scoring-page { padding-right: 0; }
+  .scoring-credit { flex-direction: column; gap: 1.5rem; }
+  .scoring-credit-header { flex: none; }
   .scoring-credit:first-child { padding-top: 2rem; }
 }
 
