@@ -782,12 +782,16 @@ hr {
   pointer-events: none;
 }
 .scoring-credit-header {
-  flex: 0 0 18rem;
+  /* Preferred 18rem so the text keeps a tidy measure on wide screens, but
+     allowed to shrink with the media column on narrow desktop widths. */
+  flex: 0 1 18rem;
   min-width: 0;
 }
-/* Media column: posters, video, and audio stack on the right. */
+/* Media column: posters, video, and audio stack on the right. Given a real
+   basis so it shrinks alongside the text instead of collapsing when space is
+   tight just above the mobile breakpoint. */
 .scoring-media {
-  flex: 1;
+  flex: 1 1 20rem;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -869,9 +873,6 @@ hr {
 }
 .scoring-festival a:hover { border-bottom-color: var(--color-text); }
 
-.scoring-poster {
-  margin-bottom: 0;
-}
 .scoring-poster img {
   display: block;
   width: 100%;
