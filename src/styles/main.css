@@ -52,7 +52,7 @@ body {
   font-family: var(--font);
   font-size: 1rem;
   font-weight: 400;
-  line-height: 1.3;
+  line-height: 1.45;
   color: var(--color-text);
   background: var(--color-bg);
   min-height: 100vh;
@@ -105,7 +105,7 @@ a:focus { opacity: 1; }
 .nav-name {
   font-size: 1.4rem;
   font-weight: 500;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   margin-bottom: 2rem;
   text-transform: uppercase;
 }
@@ -198,6 +198,7 @@ a:focus { opacity: 1; }
   font-weight: 400;
   color: var(--color-title);
   text-transform: uppercase;
+  letter-spacing: 0.06em;
   /* Yield first if the bar runs out of room so the nav links never clip. */
   min-width: 0;
   overflow: hidden;
@@ -307,7 +308,7 @@ hr {
   font-size: 1.3rem;
   color: var(--color-title);
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.05em;
 }
 
 .work-card-meta {
@@ -321,6 +322,8 @@ hr {
   padding-top: 0;
   margin-top: -3rem;
   position: relative;
+  /* capped reading measure shared by the body copy, audio, and bandcamp note */
+  --reading: 62ch;
 }
 
 /* Left sidebar: title, medium, year, counter — fixed to bottom-left */
@@ -500,10 +503,11 @@ hr {
 }
 
 .work-detail-body {
-  max-width: 50%;
+  max-width: var(--reading);
   margin: 0 auto 4rem;
   line-height: 1.55;
-  text-align: justify;
+  text-align: left;
+  text-wrap: pretty;
 }
 
 .work-videos-below {
@@ -515,10 +519,11 @@ hr {
 
 .bandcamp-wrap { margin: 5rem 0; display: block; }
 .bandcamp-note {
-  max-width: 50%;
+  max-width: var(--reading);
   margin: 0 auto 3rem;
   line-height: 1.55;
-  text-align: justify;
+  text-align: left;
+  text-wrap: pretty;
 }
 .bandcamp-embed { margin: 0 auto; width: 100%; max-width: 470px; display: block; }
 .bandcamp-wrap--horizontal .bandcamp-embed { width: 100%; max-width: 100%; margin: 0; }
@@ -536,7 +541,7 @@ hr {
   margin-bottom: 0.8rem;
 }
 .work-exhibition-inline {
-  font-weight: 300;
+  font-weight: 400;
   color: var(--color-text);
   font-size: 0.9rem;
 }
@@ -552,7 +557,7 @@ hr {
 }
 .work-detail-content > .audio-player[data-src],
 .work-detail-content > .audio-note {
-  max-width: 50%;
+  max-width: var(--reading);
   margin-left: auto;
   margin-right: auto;
 }
@@ -560,7 +565,7 @@ hr {
   text-align: center;
 }
 .audio-files-block {
-  width: 50%;
+  max-width: var(--reading);
   margin: 2rem auto 0;
   display: flex;
   flex-direction: column;
