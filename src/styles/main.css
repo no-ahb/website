@@ -997,10 +997,14 @@ hr {
     animation: hint-fade 2s ease 1s forwards;
   }
   @keyframes hint-fade { to { opacity: 0; } }
-  /* Scoring page mobile — full-width single column */
+  /* Scoring page mobile — full-width single column. Reset align-items back
+     to stretch (the desktop row uses flex-start) so the stacked media boxes
+     fill the width — without it, the aspect-ratio video boxes collapse to
+     zero width. flex:none drops the desktop basis so heights stay natural. */
   .scoring-page { padding-right: 0; }
-  .scoring-credit { flex-direction: column; gap: 1.5rem; }
-  .scoring-credit-header { flex: none; }
+  .scoring-credit { flex-direction: column; gap: 1.5rem; align-items: stretch; }
+  .scoring-credit-header,
+  .scoring-media { flex: none; }
   .scoring-credit:first-child { padding-top: 2rem; }
 }
 
