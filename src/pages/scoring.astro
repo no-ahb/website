@@ -153,47 +153,17 @@ const updated = new Date().toLocaleDateString('en-US', { year: 'numeric', month:
     </footer>
   </div>
 
-  <script is:inline>
-    document.querySelectorAll('.scoring-video').forEach((wrap) => {
+  <script>
+    import { trackMediaWatch } from '../scripts/track-media';
+    // Native <video> in the scoring grid (no facade): fire video-play on first play,
+    // video-end once watched past 3s.
+    document.querySelectorAll<HTMLElement>('.scoring-video').forEach((wrap) => {
       const video = wrap.querySelector('video');
       if (!video) return;
       const work = wrap.dataset.work || '';
       const clip = wrap.dataset.clip || undefined;
       const src = video.querySelector('source')?.src || '';
-
-      let startedAt = 0;
-      let totalMs = 0;
-      let playFired = false;
-      let endFired = false;
-
-      function markPlay() {
-        startedAt = Date.now();  // re-anchor every play so a missed pause can't inflate the next segment
-        if (!playFired) {
-          playFired = true;
-          window.umami?.track?.('video-play', { work, clip, src });
-        }
-      }
-      function markStop() {
-        if (startedAt !== 0) {
-          totalMs += Date.now() - startedAt;
-          startedAt = 0;
-        }
-      }
-      function fire(reason) {
-        if (endFired) return;
-        markStop();
-        if (totalMs < 3000) return;
-        endFired = true;
-        const dur = video.duration || 0;
-        const seconds = dur ? Math.min(Math.round(totalMs / 1000), Math.round(dur)) : Math.round(totalMs / 1000);
-        const pct = dur ? Math.min(100, Math.round((totalMs / 1000 / dur) * 100)) : 0;
-        window.umami?.track?.('video-end', { work, clip, src, seconds, pct, reason });
-      }
-
-      video.addEventListener('play', markPlay);
-      video.addEventListener('pause', markStop);
-      video.addEventListener('ended', () => fire('ended'));
-      window.addEventListener('pagehide', () => fire('leave'), { once: true });
+      trackMediaWatch(video, 'video-end', { work, clip, src }, 'video-play');
     });
   </script>
 </Base>
