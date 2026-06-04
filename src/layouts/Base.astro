@@ -24,7 +24,10 @@ const {
 
 const fullTitle = path === '/' ? 'Noah Berrie' : `${title} — Noah Berrie`;
 const canonicalURL = new URL(path, Astro.site);
-const metaDesc = description.length > 155 ? description.slice(0, description.lastIndexOf(' ', 155)) + '.' : description;
+// Truncate to ~155 chars on a word boundary; fall back to a hard cut when there is no
+// space in range (lastIndexOf returns -1, which would otherwise slice off the last char).
+const cut = description.lastIndexOf(' ', 155);
+const metaDesc = description.length > 155 ? description.slice(0, cut > 0 ? cut : 155) + '.' : description;
 const ogImage = new URL(image, Astro.site);
 
 const now = new Date();
@@ -237,8 +240,17 @@ const navLinks = [
         prevUrl = URL.createObjectURL(blob);
         faviconLink.href = prevUrl;
       };
-      setInterval(update, 250);
-      update();
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      update();  // paint the initial frame
+      if (!reduceMotion) {
+        // Only animate while the tab is visible — avoids needless 4/sec wakeups and
+        // Blob/object-URL churn on a backgrounded tab (and respects reduced-motion).
+        let timer = 0;
+        const start = () => { if (!timer) timer = window.setInterval(update, 250); };
+        const stop = () => { if (timer) { clearInterval(timer); timer = 0; } };
+        document.addEventListener('visibilitychange', () => (document.hidden ? stop() : start()));
+        if (!document.hidden) start();
+      }
     }
   </script>
 </body>

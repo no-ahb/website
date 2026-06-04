@@ -175,7 +175,8 @@ try {
     let totalMs = 0;
     let durationFired = false;
 
-    function markPlay() { if (playStartedAt === 0) playStartedAt = Date.now(); }
+    // Re-anchor on every play so a missed pause can't leave a stale timestamp.
+    function markPlay() { playStartedAt = Date.now(); }
     function markStop() {
       if (playStartedAt !== 0) {
         totalMs += Date.now() - playStartedAt;
@@ -188,11 +189,11 @@ try {
       if (totalMs < 3000) return;
       durationFired = true;
       const dur = audio?.duration || 0;
-      const seconds = Math.round(totalMs / 1000);
+      const seconds = dur ? Math.min(Math.round(totalMs / 1000), Math.round(dur)) : Math.round(totalMs / 1000);
       const pct = dur ? Math.min(100, Math.round((totalMs / 1000 / dur) * 100)) : 0;
       (window as any).umami?.track?.('audio-end', { work, clip, title, seconds, pct, reason });
     }
-    window.addEventListener('pagehide', () => fireDuration('leave'));
+    window.addEventListener('pagehide', () => fireDuration('leave'), { once: true });
 
     playBtn.addEventListener('click', () => {
       const a = ensureAudio();
