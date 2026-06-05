@@ -1,5 +1,6 @@
 ---
-title: "Setting (N1 5SH) — twelve strings driven by local FM radio"
+title: "Setting (N1 5SH)"
+subtitle: "Twelve strings driven by local FM radio"
 summary: "Twelve piano strings tuned chromatically and bolted to a gallery, set into motion by whatever is playing on local FM radio — site- and time-specific music for one London postcode."
 updated: "September 2024"
 category: "Hardware & PCBs"

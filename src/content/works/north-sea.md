@@ -3,7 +3,7 @@ title: "North Sea (Heave, Sway, Surge)"
 year: "2026"
 medium: "wall-mounted sound installation"
 types: [installation]
-summary: "534 steel strings across three frames, playing back a 25-hour gyroscope recording from the North Sea. The ocean transposed into vibrating metal."
+summary: "516 steel strings across three frames, playing back a 25-hour gyroscope recording from the North Sea. The ocean transposed into vibrating metal."
 sortOrder: 99
 video: "/videos/north-sea.mp4"
 videoPreview: "/images/north-sea/preview.mp4"
@@ -23,8 +23,6 @@ exhibitions:
 draft: false
 ---
 
-This piece translates the movement of the ocean into sound.
+Three motors transpose three axes of movement from a buoy with a gyroscope at sea off the coast of Margate. The movement of the waves during a single day in November 2025 was recorded and then transformed into the linear motion of a plectrum against strings.
 
-Three motors transpose three axes of movement from a buoy with a gyroscope that was put out to sea. The movement of the waves throughout a single 24-hour day in November 2025 was recorded and then transformed into the linear motion of a plectrum against strings.
-
-There are 534 steel strings divided across three frames, all tuned close to unison to create a dense, monochrome resonance with subtle variations in pitch and timbre. Performing a single day on loop, NORTH SEA becomes a durational piece of music played by the sea itself.
+516 steel strings divided across three frames, all tuned close to unison, create a dense, monochrome field with small variations in pitch and timbre. Performing a 25-hour loop, NORTH SEA becomes a durational piece played by the sea itself.

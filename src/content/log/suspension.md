@@ -1,5 +1,6 @@
 ---
-title: "Suspension — firmware for nine strings that never go silent"
+title: "Suspension"
+subtitle: "Firmware for self-oscillating strings"
 summary: "Nine piano wires sustained by electromagnetic feedback, each running a Daisy Seed with eight self-tuning mechanisms — built so the installation ran unattended for two months and no knob could break it."
 updated: "March 2026"
 category: "Hardware & PCBs"
@@ -10,6 +11,7 @@ project: "/works/suspension/"
 hero: "/images/suspension/01-hero.jpeg"
 thumb: "/images/log/suspension/nine-boards.jpg"
 video: "/videos/suspension.mp4"
+videoPoster: "/images/suspension/01-hero.jpeg"
 draft: false
 ---
 
@@ -121,9 +123,4 @@ And below, documentation of the installation in the gallery:
 <figure>
   <img src="/images/log/suspension/gallery-wide.jpg" alt="A high view of the gallery: a steel suspension beam carrying a circuit board and cabling, tall windows in the corner, the floor below." loading="lazy" decoding="async" />
   <figcaption>During install — a string's board mounted on its steel suspension beam, the wire dropping to the floor.</figcaption>
-</figure>
-
-<figure>
-  <img src="/images/log/suspension/gallery-hardware.jpg" alt="Close view of a circuit board mounted on a steel beam near the ceiling, power and audio cables wired in." loading="lazy" decoding="async" />
-  <figcaption>One board in place on the beam — wired in and running unattended.</figcaption>
 </figure>

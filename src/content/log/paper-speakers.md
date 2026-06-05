@@ -1,5 +1,6 @@
 ---
-title: "Paper Speakers — a generative engine for thirty-four hand-built transducers"
+title: "Paper Speakers"
+subtitle: "A generative engine for thirty-four hand-built voice coils"
 summary: "Thirty-four hand-wound electromagnetic coils on paper membranes, driven by a generative SuperCollider engine that continuously composes slow tone-clusters — density, pitch and pacing all drifting on Brownian streams so it never repeats."
 updated: "April 2024"
 category: "Hardware & PCBs"
@@ -8,6 +9,7 @@ tags: ["hardware", "supercollider", "generative"]
 stack: ["SuperCollider", "SuperClean", "hand-wound coils", "DFPlayer SD modules"]
 project: "/works/paper-speakers/"
 hero: "/images/paper-speakers/01-hero.jpg"
+thumb: "/images/log/paper-speakers/internals.jpg"
 video: "/videos/paper-speakers-1.mp4"
 draft: false
 ---

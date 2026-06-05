@@ -1,5 +1,6 @@
 ---
-title: "INTERVAL — self-oscillating string modules tuned to a room"
+title: "INTERVAL"
+subtitle: "Self-oscillating string modules tuned to a room"
 summary: "Five wall-mounted steel strings driven into continuous self-oscillation by electromagnetic sustainers. I designed the wooden driver-modules in CAD, built the sustainer electronics from open-source designs, and tuned each string to the building's resonances."
 updated: "May 2024"
 category: "Hardware & PCBs"
