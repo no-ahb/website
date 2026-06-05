@@ -860,7 +860,7 @@ hr {
 }
 .scoring-role {
   margin: 0 0 0.85rem;
-  color: var(--color-meta);
+  color: var(--color-text);
   font-size: 0.9rem;
   line-height: 1.55;
 }
