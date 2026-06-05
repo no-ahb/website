@@ -8,7 +8,7 @@ sortOrder: 30
 tags: ["ml", "audio", "generative", "data"]
 stack: ["SuperCollider", "Python", "librosa / numpy", "UMAP", "Flask", "Plotly WebGL", "REAPER"]
 project: "/works/antiphon/"
-hero: "/images/log/antiphon/explorer-hero.png"
+thumb: "/images/log/antiphon/explorer-hero.png"
 audioFiles:
   - src: "/audio/antiphon.mp3"
     note: "Stereo reduction of the full 14-channel piece — the generative engine walking the timbral map."

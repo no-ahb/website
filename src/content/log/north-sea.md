@@ -1,14 +1,15 @@
 ---
-title: "North Sea — a buoy that records the sea, and strings that replay it"
+title: "North Sea"
+subtitle: "A buoy that records the sea, stepper motors that replay it"
 summary: "A self-contained buoy logs ocean motion at 50 Hz for 25 hours; an offline pipeline reconstructs surge, sway and heave; and three belt-driven carriages replay that motion across a field of tuned strings."
 updated: "March 2026"
-category: "Data & ML"
+categories: ["Hardware & PCBs", "Data & ML"]
 sortOrder: 25
 tags: ["hardware", "firmware", "sensors", "dsp"]
 stack: ["Raspberry Pi Pico 2", "MicroPython", "BNO085 IMU", "NumPy / SciPy", "TMC2209 steppers", "EasyEDA PCB"]
 project: "/works/north-sea/"
-hero: "/images/log/north-sea/pcb-v1.jpg"
-heroPosition: "center 68%"
+hero: "/images/north-sea/01-header.jpeg"
+thumb: "/images/log/north-sea/pcb-v1.jpg"
 video: "/videos/north-sea.mp4"
 videoPoster: "/images/north-sea/01-header.jpeg"
 draft: false

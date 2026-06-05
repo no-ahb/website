@@ -1,12 +1,13 @@
 ---
 title: "Infinite Bach"
-subtitle: "training a small neural net to mix a cello"
+subtitle: "Training a small neural net to mix a cello"
 summary: "For cellist Maya Beiser, I trained a small neural network to mix her cello: it maps a 2-D control pad to a full multi-mic EQ mix, interpolating between a handful of corner mixes I set by hand."
 updated: "November 2022"
 category: "Data & ML"
 sortOrder: 16
 tags: ["ml", "max-msp", "audio"]
 stack: ["Max/MSP", "Max for Live", "FluCoMa", "Ableton Live"]
+thumb: "/images/log/infinite-bach/maya-beiser.jpg"
 audioFiles:
   - src: "/audio/infinite-bach.mp3"
     note: "A binaural render of the multi-mic Bach mix the system produces — ninety seconds, best on headphones."
@@ -14,6 +15,10 @@ draft: false
 ---
 
 Infinite Bach is a project I built for cellist [Maya Beiser](https://mayabeiser.com/), working from multi-mic stems of her cello. The premise: she plays Bach, and the system handles the mix — a single gesture moves between mixes of her many microphones. The core of it is a small neural network that blends between a handful of reference mixes I set at the corners of a control pad. I built it in [Max/MSP](https://cycling74.com/products/max) and Max for Live, as a studio system rather than a live rig.
+
+<figure>
+  <img src="/images/log/infinite-bach/maya-beiser.jpg" alt="Cellist Maya Beiser, eyes closed and head tilted back, dressed in black with a sculptural fanned gold collar sweeping up around her neck; her cello rests against her against a dark background." loading="lazy" decoding="async" />
+</figure>
 
 ## What I built
 
