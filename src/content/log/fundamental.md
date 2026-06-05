@@ -3,7 +3,7 @@ title: "FUNDAMENTAL"
 subtitle: "Recording a building until its room modes take over"
 summary: "An automated SuperCollider process records a gallery, plays it back through basement subwoofers, and re-records — looping until the room's own 14–15 Hz modes dominate, then slows the result to subsonic and plays it back autonomously."
 updated: "March 2026"
-category: "Patches & UI"
+categories: ["Patches & UI"]
 sortOrder: 15
 tags: ["dsp", "supercollider", "acoustics"]
 stack: ["SuperCollider", "Focusrite Scarlett 18i20", "Mackie SWA 1501 subs", "Mac Mini M1", "macOS LaunchAgent"]

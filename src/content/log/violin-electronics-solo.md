@@ -3,7 +3,7 @@ title: "Variable Loops and FDNs"
 subtitle: "Live performance system for solo violin"
 summary: "A live-performance instrument in SuperCollider: one violin feeds a network of self-modulating variable delays that sustains and spatializes it across multiple channels — no buffers, no loop boundaries."
 updated: "May 2026"
-category: "Patches & UI"
+categories: ["Patches & UI"]
 sortOrder: 18
 tags: ["dsp", "supercollider", "live-performance"]
 stack: ["SuperCollider", "real-time DSP", "multichannel spatial audio", "MIDI foot control"]

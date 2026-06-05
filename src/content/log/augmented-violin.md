@@ -3,7 +3,7 @@ title: "Augmented violin"
 subtitle: "A live performance system, 2022–2024"
 summary: "A live-electronics system for violin, built and rebuilt across 2022–2024: audio machine-learning that classified string and bowing, a modular Max synth, experimental IMU 'gloves' — then, the way it kept pointing, stripped back to pure feedback."
 updated: "June 2024"
-category: "Data & ML"
+categories: ["Data & ML"]
 sortOrder: 7
 tags: ["dsp", "max-msp", "ml", "sensors"]
 stack: ["Max/MSP", "FluCoMa", "BNO055 IMU", "Teensy", "Ableton Live"]

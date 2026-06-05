@@ -3,7 +3,7 @@ title: "ANTIPHON"
 subtitle: "Composition via multidimensional timbral traversal"
 summary: "300,000 timbral windows from a string quintet and an orchestra of objects, mapped with UMAP and composed into a 14-channel piece by a SuperCollider engine that navigates it."
 updated: "March 2026"
-category: "Data & ML"
+categories: ["Data & ML"]
 sortOrder: 30
 tags: ["ml", "audio", "generative", "data"]
 stack: ["SuperCollider", "Python", "librosa / numpy", "UMAP", "Flask", "Plotly WebGL", "REAPER"]

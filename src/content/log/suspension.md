@@ -3,7 +3,7 @@ title: "Suspension"
 subtitle: "Firmware for self-oscillating strings"
 summary: "Nine piano wires sustained by electromagnetic feedback, each running a Daisy Seed with eight self-tuning mechanisms — built so the installation ran unattended for two months and no knob could break it."
 updated: "March 2026"
-category: "Hardware & PCBs"
+categories: ["Hardware & PCBs"]
 sortOrder: 20
 tags: ["hardware", "firmware", "dsp"]
 stack: ["Daisy Seed", "DaisyDuino / C++", "real-time DSP", "electromagnetic pickup", "OPA2134 preamp", "electromagnetic driver"]
