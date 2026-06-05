@@ -9,6 +9,7 @@
   --color-accent-info: #002FA7;
   --color-accent-works: #8B0000;
   --color-accent-scoring: #006400;
+  --color-accent-log: #4C2A86;
   --color-surface: #f5f5f5;
   --font: 'Instrument Sans', -apple-system, 'Helvetica Neue', sans-serif;
   --nav-width: 18%;
@@ -1037,4 +1038,527 @@ hr {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ============================================================
+   /log — engineering portfolio. Additive; reuses existing tokens
+   and the scoring page's vertical rhythm. /log is intentionally not
+   in nav, so there are no nav-accent selectors — the accent token is
+   for in-page links, tags, and footer only.
+   ============================================================ */
+
+/* Listing */
+.log-header {
+  position: relative;
+  padding: 0 1.25rem 1rem;
+  margin-bottom: 0;
+}
+.log-header-title {
+  font-size: 1.4rem;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-title);
+  margin: 0 0 0.75rem;
+}
+.log-standfirst { max-width: 38rem; color: var(--color-text); line-height: 1.55; }
+
+/* Filter + sort bar: category chips + a date-order toggle, between the header and the list.
+   Its bottom rule (.log-filters::after) lines up with the card rules and runs to the divider. */
+.log-filters {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.6rem 1rem;
+  padding: 0 1.25rem 1rem;
+}
+.log-filter-group { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.log-filter,
+.log-sort {
+  font: inherit;
+  font-size: 0.72rem;
+  color: var(--color-meta);
+  background: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+/* Category facets are little outlined boxes; hover / selected ink the border and the label. */
+.log-filter {
+  line-height: 1.3;
+  border: 1px solid color-mix(in srgb, var(--color-rule) 30%, transparent);
+  padding: 0.32rem 0.55rem;
+}
+.log-filter:hover { color: var(--color-title); border-color: var(--color-rule); }
+.log-filter.is-active { color: var(--color-title); border-color: var(--color-rule); font-weight: 500; }
+/* The date order stays a plain text toggle, not a box. */
+.log-sort {
+  border: 0;
+  padding: 0;
+  white-space: nowrap;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.log-sort:hover { color: var(--color-title); }
+.log-sort::after { content: " ⇅"; }
+
+/* Index: a two-pane master–detail. The left column is a menu of studies separated
+   by the same dark rule as the rest of the page furniture; the right column is the
+   viewer — a hover-preview image by default, or the full study once one is clicked.
+   A dark vertical divider runs between them, and each column scrolls on its own so
+   the menu stays in place while the article scrolls. */
+/* Page wrapper — sizing lives on .log-layout; this groups the layout (or the
+   empty-state placeholder) and spans the content width. */
+.log-page { width: 100%; }
+.log-layout {
+  position: relative;
+  display: grid;
+  grid-template-columns: 17rem minmax(0, 1fr);  /* tight menu · viewer fills the remaining width */
+  height: calc(100vh - 5rem);                    /* fill the viewport inside .site-main padding */
+}
+.log-main {
+  min-width: 0;
+  height: 100%;
+  overflow-y: auto;
+  scrollbar-width: none;            /* Firefox */
+  /* No right padding: the separator rules run the full width and meet the divider.
+     Text is held off the divider by the inner padding on the header + each row. */
+}
+/* The menu frame is drawn on an inner wrapper that's only as tall as its content, so the
+   left edge line and the divider stop at the last box: a short, filtered list no longer
+   trails the lines down an empty viewport, and a long list scrolls them with its rows.
+   Hairlines scaled to a true 1 device pixel; the row rules run into them so every study is
+   boxed. */
+.log-main-inner { position: relative; }
+.log-main-inner::before,
+.log-main-inner::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--color-rule);
+  transform: scaleX(0.5);
+  pointer-events: none;
+  z-index: 1;
+}
+.log-main-inner::before { left: 0; transform-origin: left center; }    /* left edge of the menu */
+.log-main-inner::after  { right: 0; transform-origin: right center; }  /* divider on the column boundary */
+.log-detail-col {
+  position: relative;
+  min-width: 0;
+  height: 100%;
+  overflow-y: auto;
+  padding: 0 0.5rem 3rem 2.5rem;
+  scrollbar-width: none;            /* Firefox */
+}
+/* WebKit/Blink: hide the bars too — both panes still scroll (wheel/trackpad/keys),
+   the bars just don't clutter the boxed menu or the article viewer. */
+.log-main::-webkit-scrollbar,
+.log-detail-col::-webkit-scrollbar { display: none; }
+
+/* Hover stage — overlays the viewer and holds the crossfading preview images;
+   hidden the instant a study is opened. No shadow: the image sits flat. */
+.log-stage {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.log-detail-col.has-open .log-stage { display: none; }
+.log-stage-img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  max-width: 88%;
+  max-height: 70vh;
+  width: auto;
+  height: auto;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  opacity: 0;
+  transform: translate(-50%, -50%) rotate(var(--rot, 0deg));
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+.log-stage-img.is-active { opacity: 1; }
+
+/* Inline study panels — pre-rendered, one shown at a time (desktop only) */
+.log-panel { display: none; }
+.log-panel.is-open { display: block; }
+.log-panel:focus { outline: none; }
+/* Inline, the study fills the viewer column left-aligned (not the centered 74rem reading
+   cap the standalone page uses): the body text uses the full width and, with a fixed left
+   edge, the header/footer rules line up with the divider. --log-wide:100% drives the
+   article max-width, the running-text measure, and the media width all at once. */
+.log-detail.log-panel {
+  --log-wide: 100%;
+  margin-inline: 0;
+}
+.log-panel-close {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-meta);
+  transition: color 0.15s ease;
+}
+.log-panel-close:hover { color: var(--color-accent-log); }
+
+@media (max-width: 900px), (hover: none) {
+  /* Collapse to one scrolling list; the standalone /log/<slug>/ pages serve detail. */
+  .log-layout { display: block; height: auto; }
+  .log-main { height: auto; overflow: visible; }
+  .log-detail-col { display: none; }
+  .log-layout::before, .log-layout::after { display: none; }  /* no frame lines in the single-column list */
+  .log-header, .log-filters, .log-card-link { padding-left: 0; padding-right: 0; }
+}
+
+.log-list { list-style: none; display: flex; flex-direction: column; }
+/* Staggered reveal: when the filter / sort changes, the visible boxes fade and rise in one
+   after another. The script sets --reveal-i per row and re-triggers by toggling .is-revealing;
+   the global prefers-reduced-motion rule zeroes the duration and the delay is cleared below. */
+@keyframes log-reveal {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+.log-list.is-revealing .log-card {
+  animation: log-reveal 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--reveal-i, 0) * 100ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  .log-list.is-revealing .log-card { animation-delay: 0ms; }
+}
+/* Row + header separators: full-width hairlines that run to the divider. A 1px bar
+   scaled to 0.5 renders a true 1-device-pixel line on hi-DPR (a plain 0.5px border
+   gets rounded back up to 1px by Chrome). */
+.log-card { position: relative; background-color: transparent; }
+.log-filters::after,
+.log-card::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--color-rule);
+  transform: scaleY(0.5);
+  transform-origin: bottom;
+  pointer-events: none;
+}
+.log-card-link { display: block; padding: 1.5rem 1.25rem; text-decoration: none; color: inherit; }
+/* Date eyebrow — a clear "Month YYYY" over each title (the menu's primary date cue now that
+   studies are also filterable/sortable by it). */
+.log-card-date {
+  font-size: 0.66rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--color-meta);
+  margin: 0 0 0.4rem;
+}
+.log-card-title {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--color-title);
+  margin: 0;
+}
+/* Tools used — a quiet middot-separated line in the menu, in place of the boxed chips
+   and the gray date (both read as clutter at this size). */
+.log-card-tools {
+  margin-top: 0.5rem;
+  font-size: 0.72rem;
+  line-height: 1.55;
+  letter-spacing: 0.02em;
+  color: var(--color-meta);
+}
+
+/* Desktop only. Each box's hover fill is a fixed shade of the works red (--hover-accent,
+   set inline per row in index.astro) so the menu reads top-to-bottom as one light→dark red
+   gradient. The fill snaps ON instantly but FADES OUT on leave — so a swept cursor leaves a
+   fading red trail behind it. The frame lines (above) clip the fill. */
+@media (hover: hover) and (min-width: 901px) {
+  /* Asymmetric transition for the trail: the fade lives on the resting state, while :hover
+     sets transition:none so entering a box is instant. (Global prefers-reduced-motion above
+     zeroes the duration.) */
+  .log-card { transition: background-color 0.45s ease; }
+  .log-card-title,
+  .log-card-tools,
+  .log-card-date { transition: color 0.45s ease; }
+  .log-card:hover,
+  .log-card:hover .log-card-title,
+  .log-card:hover .log-card-tools,
+  .log-card:hover .log-card-date { transition: none; }
+  /* Open box: NOT filled — its date + title + tools freeze to the shade it was opened with. */
+  .log-card.is-active .log-card-title,
+  .log-card.is-active .log-card-tools,
+  .log-card.is-active .log-card-date { color: var(--active-accent, var(--color-accent-works)); }
+  /* Hover: fill the box with crisp white text. Listed last so white wins over the frozen
+     colour while hovering; opacity:1 overrides the global a:hover dimming. */
+  .log-card:hover { background-color: var(--hover-accent, var(--color-accent-works)); }
+  .log-card-link:hover { opacity: 1; }
+  .log-card:hover .log-card-title,
+  .log-card:hover .log-card-tools,
+  .log-card:hover .log-card-date { color: #fff; }
+}
+
+/* Chips: article tags + footer stack, shared look (the menu uses .log-card-tools) */
+.log-detail-tags, .log-stack {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.03em;
+  color: var(--color-meta);
+}
+.log-detail-tags li, .log-stack li {
+  border: 1px solid var(--color-border);
+  padding: 0.15rem 0.5rem;
+  border-radius: 2px;
+}
+
+/* Detail */
+/* Fluid editorial layout: a wide, centered article where media (hero, figures, video)
+   breaks out to the full width while running text is held to a readable, centered measure.
+   --log-measure = reading column · --log-wide = full media/article width. Both adapt to vw. */
+.log-detail {
+  --log-measure: var(--log-wide);  /* text fills the full width, level with the widest image */
+  --log-wide: 74rem;
+  max-width: var(--log-wide);
+  margin-inline: auto;
+}
+/* Header shares the reading column so the title + rule align with the body text */
+.log-detail-header {
+  position: relative;
+  max-width: var(--log-measure);
+  margin: 0 auto 2.5rem;
+  padding-bottom: 1.5rem;
+}
+/* Rule under the header — black scaled hairline, matching the footer rule and the menu
+   boxes; in the inline viewer it bleeds left to meet the divider and the box grid. */
+.log-detail-header::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--color-rule);
+  transform: scaleY(0.5);
+  transform-origin: bottom;
+  pointer-events: none;
+}
+.log-panel .log-detail-header::after { left: -2.5rem; }
+.log-detail-eyebrow { margin: 0 0 1.25rem; font-size: 0.8rem; letter-spacing: 0.04em; text-transform: uppercase; }
+.log-detail-eyebrow a { color: var(--color-meta); text-decoration: none; }
+.log-detail-eyebrow a:hover { color: var(--color-accent-log); }
+.log-detail-title { font-size: 2rem; font-weight: 500; line-height: 1.15; color: var(--color-title); margin: 0; }
+.log-detail-subtitle { margin: 0.55rem 0 0; font-size: 1.12rem; line-height: 1.3; color: var(--color-meta); font-weight: 400; max-width: 40rem; }
+.log-detail-updated { color: var(--color-meta); font-size: 0.82rem; margin: 0.5rem 0 0; }
+.log-detail-tags { margin-top: 1rem; }
+
+/* Hero — full article width, centered; cover + height cap keeps tall heroes banner-like */
+.log-hero { margin: 0 auto 2.5rem; }
+.log-hero img { width: 100%; max-height: 78vh; object-fit: cover; display: block; border: 1px solid var(--color-border); }
+/* UI-screenshot heroes (heroFit: "contain"): size to the image's own aspect, capped by
+   the same max-height and centered, so the whole frame shows instead of a cover-cropped band. */
+.log-hero.log-hero--contain img { width: auto; max-width: 100%; object-fit: contain; margin-inline: auto; }
+
+/* Body spans the full article; running text below is re-constrained to the reading measure */
+.log-detail-body { line-height: 1.62; color: var(--color-text); }
+.log-detail-body > :first-child { margin-top: 0; }
+.log-detail-body p { margin: 0 0 1.4rem; }
+.log-detail-body :is(h2, h3) { color: var(--color-title); margin: 2.75rem 0 1rem; }
+.log-detail-body h2 { font-size: 1.4rem; }
+.log-detail-body h3 { font-size: 1.1rem; }
+.log-detail-body a { color: var(--color-accent-log); border-bottom: 1px solid var(--color-border); text-decoration: none; }
+.log-detail-body a:hover { border-bottom-color: var(--color-accent-log); }
+.log-detail-body ul, .log-detail-body ol { margin: 0 0 1.4rem 1.25rem; }
+.log-detail-body li { margin: 0.3rem 0; }
+.log-detail-body strong { color: var(--color-title); }
+
+/* Inline + block code (Shiki colors fenced blocks; this is the chrome only) */
+.log-detail-body :is(pre, code, kbd, samp) {
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+.log-detail-body code { background: var(--color-surface); padding: 0.1em 0.35em; border-radius: 2px; }
+.log-detail-body pre {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  line-height: 1.5;
+  margin: 1.75rem 0;
+  border-radius: 2px;
+}
+.log-detail-body pre code { background: none; padding: 0; }
+
+/* Figures — break out past the text column and center. Top-level figures shrink-wrap their
+   image, which fills the article width but never upscales past native size; portrait/tall
+   shots are clamped by height so they don't dominate. Captions track the image width. */
+.log-detail-body figure { margin: 2.5rem auto; }
+.log-detail-body figure img { width: 100%; height: auto; display: block; border: 1px solid var(--color-border); }
+.log-detail-body figcaption { margin-top: 0.5rem; color: var(--color-meta); font-size: 0.82rem; line-height: 1.5; }
+
+/* Phone-screenshot pairs — portrait app captures shown side by side, centered at device scale */
+.log-detail-body .phone-row { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; max-width: 46rem; margin: 2.5rem auto; }
+.log-detail-body .phone-row figure { flex: 1 1 220px; max-width: 22rem; margin: 0; }
+
+/* Contact-sheet grid — a set of small related photos in roughly one photo's footprint */
+.log-detail-body .log-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.75rem;
+  margin: 2.5rem auto;
+  align-items: start;
+}
+.log-detail-body .log-grid figure { margin: 0; width: 100%; }
+.log-detail-body .log-grid img { aspect-ratio: 1 / 1; object-fit: cover; }
+.log-detail-body .log-grid figcaption { margin-top: 0.4rem; font-size: 0.72rem; }
+
+/* Five-up contact sheet as two-over-three; both rows span the full width */
+.log-detail-body .log-grid-2-3 { grid-template-columns: repeat(6, 1fr); }
+.log-detail-body .log-grid-2-3 > figure:nth-child(-n+2) { grid-column: span 3; }
+.log-detail-body .log-grid-2-3 > figure:nth-child(n+3) { grid-column: span 2; }
+
+/* Phone-screenshot showcase — a tidy wall of app screens at device scale */
+.log-detail-body .log-gallery {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem 1.25rem;
+  max-width: 56rem;
+  margin: 2.5rem auto;
+}
+.log-detail-body .log-gallery figure { margin: 0; }
+.log-detail-body .log-gallery figcaption { font-size: 0.72rem; }
+
+/* Two-up row — equal columns so a comparison pair shares its edges (stays aligned) */
+.log-detail-body .log-duo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  margin: 2.5rem auto;
+  align-items: start;
+}
+.log-detail-body .log-duo figure { margin: 0; width: 100%; }
+
+/* A single figure held narrower than full width, centered (e.g. a lone near-square plot) */
+.log-detail-body .log-narrow { max-width: 40rem; margin-inline: auto; }
+
+/* Every article image is click-to-zoom (see the lightbox script in the route) */
+.log-detail-body figure img, .log-hero img { cursor: zoom-in; }
+
+/* Lightbox — a thumbnail shown full-size, floating over the article; click/Esc to dismiss */
+.log-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+  padding: 4vmin;
+  background: rgba(12, 12, 14, 0.85);
+  cursor: zoom-out;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+.log-lightbox.is-open { opacity: 1; }
+.log-lightbox img {
+  max-width: min(100%, 72rem);
+  max-height: 88vh;
+  width: auto;
+  height: auto;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.55);
+}
+.log-lightbox-cap {
+  margin: 0;
+  max-width: 60ch;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  text-align: center;
+}
+@media (prefers-reduced-motion: reduce) { .log-lightbox { transition: none; } }
+
+/* Placeholder slot for photos Noah will supply */
+.log-detail-body .photo-slot {
+  max-width: var(--log-measure);
+  border: 1px dashed var(--color-border);
+  background: var(--color-surface);
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  color: var(--color-meta);
+  font-size: 0.85rem;
+  margin: 2rem auto 0.5rem;
+}
+
+/* Hold running text to the reading measure, centered in the wide body. Placed after the
+   per-element margin rules above so the inline centering wins on source order. Media
+   (figures, .phone-row, .log-split) is deliberately excluded so it can break out wider. */
+.log-detail-body > :is(p, h2, h3, h4, ul, ol, blockquote, pre) {
+  max-width: var(--log-measure);
+  margin-inline: auto;
+}
+
+/* Scoring-style two-column split for artifact-heavy sections (raw HTML in markdown) */
+.log-split { display: flex; gap: 3rem; align-items: flex-start; margin: 2.5rem 0; }
+.log-split-text { flex: 1 1 21rem; min-width: 0; }
+.log-split-media { flex: 1 1 22rem; min-width: 0; display: flex; flex-direction: column; gap: 1.25rem; }
+.log-split-media figure { margin: 0; }
+
+/* Frontmatter media blocks below the body */
+.log-audio-block { margin: 2.5rem auto 0; display: flex; flex-direction: column; gap: 1rem; max-width: var(--log-measure); }
+.log-audio-entry { display: flex; flex-direction: column; gap: 0.5rem; }  /* player above its optional note */
+.log-videos-below { margin: 1.5rem auto 0; display: flex; flex-direction: column; gap: 1.5rem; max-width: var(--log-wide); }
+
+/* Footer */
+.log-detail-footer {
+  position: relative;
+  max-width: var(--log-measure);
+  margin: 3.5rem auto 0;
+  padding-top: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+/* The rule above the footer: a scaled hairline matching the menu's box rules (a plain
+   1px border renders 2 device-px on hi-DPR — twice as thick). */
+.log-detail-footer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--color-rule);
+  transform: scaleY(0.5);
+  transform-origin: top;
+  pointer-events: none;
+}
+/* Inline viewer: the article is inset from the divider by the column's left padding
+   (2.5rem). Pull the rule back so it meets the divider and intersects the menu boxes. */
+.log-panel .log-detail-footer::before { left: -2.5rem; }
+.log-footer-section { display: flex; flex-direction: column; gap: 0.6rem; }
+.log-footer-label { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-meta); }
+.log-footer-links { display: flex; gap: 1.5rem; }
+.log-footer-links a { color: var(--color-accent-log); text-decoration: none; font-size: 0.9rem; }
+.log-footer-links a:hover { text-decoration: underline; }
+
+@media (max-width: 768px) {
+  .log-split { flex-direction: column; gap: 1.5rem; }
+  .log-duo { grid-template-columns: 1fr; }
+  .log-gallery { grid-template-columns: repeat(2, 1fr); }
+  .log-detail-title { font-size: 1.6rem; }
+  .log-detail-body figure { margin: 1.75rem auto; }
+  .log-hero img { max-height: 62vh; }
 }

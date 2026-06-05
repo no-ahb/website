@@ -1,0 +1,233 @@
+---
+// Shared article body for a /log study. Rendered both on the standalone
+// /log/<slug>/ page and inline inside the right pane of the /log index, so the
+// two can never drift. The consumer wraps this in <article class="log-detail">.
+// The "eyebrow" slot is for the per-context lead (a back link on the standalone
+// page, a close button in the inline panel).
+import AudioPlayer from './AudioPlayer.astro';
+import VideoEmbed from './VideoEmbed.astro';
+import { render } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+import { asset } from '../lib/asset';
+
+interface Props {
+  post: CollectionEntry<'log'>;
+  /** 'eager' for the standalone page (hero is the LCP); 'lazy' for index panels. */
+  heroLoading?: 'eager' | 'lazy';
+  /** 'h1' on the standalone page; 'h2' when many panels are inlined on the index
+   *  (one page must not have multiple <h1>s). Styling is class-based, so unchanged. */
+  titleAs?: 'h1' | 'h2';
+}
+
+const { post, heroLoading = 'lazy', titleAs = 'h1' } = Astro.props;
+const TitleTag = titleAs;
+const { Content } = await render(post);
+const heroImage = post.data.hero || post.data.images[0];
+// Video posters default to the hero, but a study can override it when the hero is
+// a detail shot (e.g. a PCB) while the video documents the finished piece.
+const videoPoster = post.data.videoPoster || heroImage;
+---
+
+<header class="log-detail-header">
+  <slot name="eyebrow" />
+  <TitleTag class="log-detail-title">{post.data.title}</TitleTag>
+  {post.data.subtitle && <p class="log-detail-subtitle">{post.data.subtitle}</p>}
+  {post.data.updated && <p class="log-detail-updated">{post.data.updated}</p>}
+  {post.data.tags.length > 0 && (
+    <ul class="log-detail-tags">
+      {post.data.tags.map((t) => <li>{t}</li>)}
+    </ul>
+  )}
+</header>
+
+{heroImage && (
+  <figure class:list={["log-hero", post.data.heroFit === 'contain' && "log-hero--contain"]}>
+    <img
+      src={asset(heroImage)}
+      alt={`${post.data.title} — hero`}
+      style={post.data.heroPosition ? `object-position: ${post.data.heroPosition}` : undefined}
+      loading={heroLoading}
+      fetchpriority={heroLoading === 'eager' ? 'high' : undefined}
+    />
+  </figure>
+)}
+
+<div class="log-detail-body">
+  <Content />
+</div>
+
+{post.data.audioFiles.length > 0 && (
+  <div class="log-audio-block">
+    {post.data.audioFiles.map((af, i) => (
+      <div class="log-audio-entry">
+        <AudioPlayer src={af.src} title={`${post.data.title} — ${i + 1}`} work={post.data.title} clip={String(i + 1)} />
+        {af.note && <p class="audio-note">{af.note}</p>}
+      </div>
+    ))}
+  </div>
+)}
+
+{post.data.video && (
+  <VideoEmbed
+    url={post.data.video}
+    type={post.data.videoType}
+    poster={videoPoster}
+    label={`Play ${post.data.title} video`}
+    titleAttr={`${post.data.title} — video`}
+    workTitle={post.data.title}
+  />
+)}
+
+{post.data.videosBelow.length > 0 && (
+  <div class="log-videos-below">
+    {post.data.videosBelow.map((v, i) => (
+      <VideoEmbed
+        url={v.url}
+        type={v.type}
+        poster={videoPoster}
+        label={`Play ${post.data.title} video ${i + 1}`}
+        titleAttr={`${post.data.title} — video ${i + 1}`}
+        workTitle={post.data.title}
+      />
+    ))}
+  </div>
+)}
+
+<footer class="log-detail-footer">
+  {post.data.stack.length > 0 && (
+    <div class="log-footer-section">
+      <span class="log-footer-label">Stack</span>
+      <ul class="log-stack">{post.data.stack.map((s) => <li>{s}</li>)}</ul>
+    </div>
+  )}
+  {(post.data.demo || post.data.repo || post.data.project) && (
+    <div class="log-footer-links">
+      {post.data.demo && (
+        <a href={post.data.demo} target="_blank" rel="noopener noreferrer" data-umami-event="log-demo">Live demo ↗</a>
+      )}
+      {post.data.repo && (
+        <a href={post.data.repo} target="_blank" rel="noopener noreferrer" data-umami-event="log-repo">Source ↗</a>
+      )}
+      {post.data.project && <a href={post.data.project}>Related work →</a>}
+    </div>
+  )}
+</footer>
+
+<!-- Local/YouTube video facade handler. The work title is read from the button's
+     data-umami-event-work attribute (set by VideoEmbed) so a single bundled handler
+     serves every study, including the many pre-rendered panels on the index. -->
+<script>
+  function trackVideoWatch(video: HTMLVideoElement, work: string, src: string) {
+    let startedAt = 0;
+    let totalMs = 0;
+    let fired = false;
+    // Re-anchor on every 'play' rather than only when idle: if a 'pause' is ever
+    // missed (tab throttling, element teardown), the next 'play' resets the clock
+    // instead of accumulating now − stale-timestamp and reporting a wild duration.
+    function markPlay() { startedAt = Date.now(); }
+    function markStop() {
+      if (startedAt !== 0) {
+        totalMs += Date.now() - startedAt;
+        startedAt = 0;
+      }
+    }
+    function fire(reason: string) {
+      if (fired) return;
+      markStop();
+      if (totalMs < 3000) return;
+      fired = true;
+      const dur = video.duration || 0;
+      // Clamp to the clip length so a stray accumulation can never over-report.
+      const seconds = dur ? Math.min(Math.round(totalMs / 1000), Math.round(dur)) : Math.round(totalMs / 1000);
+      const pct = dur ? Math.min(100, Math.round((totalMs / 1000 / dur) * 100)) : 0;
+      (window as any).umami?.track?.('video-end', { work, src, seconds, pct, reason });
+    }
+    video.addEventListener('play', markPlay);
+    video.addEventListener('pause', markStop);
+    video.addEventListener('ended', () => fire('ended'));
+    window.addEventListener('pagehide', () => fire('leave'), { once: true });
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('.log-detail .video-facade').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const local = btn.getAttribute('data-local-src');
+      const yt = btn.getAttribute('data-yt-src');
+      const work = btn.getAttribute('data-umami-event-work') || '';
+      if (local) {
+        const v = document.createElement('video');
+        v.src = local;
+        v.controls = true;
+        v.autoplay = true;
+        v.playsInline = true;
+        v.preload = 'metadata';
+        v.title = btn.getAttribute('aria-label') || '';
+        btn.replaceWith(v);
+        v.play?.().catch(() => {});
+        trackVideoWatch(v, work, local);
+      } else if (yt) {
+        const iframe = document.createElement('iframe');
+        iframe.src = yt;
+        iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture; gyroscope; accelerometer');
+        iframe.setAttribute('allowfullscreen', '');
+        iframe.title = btn.getAttribute('aria-label') || '';
+        btn.replaceWith(iframe);
+      }
+    });
+  });
+</script>
+
+<script>
+  // Wiki behavior: open external reference links in a new tab; keep internal
+  // cross-links (other /log studies, /works pages) navigating in place.
+  document.querySelectorAll<HTMLAnchorElement>('.log-detail-body a[href^="http"]').forEach((a) => {
+    // Anchor elements expose a parsed `.hostname` directly — no need to construct a URL.
+    if (a.hostname !== location.hostname) {
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+    }
+  });
+</script>
+
+<!-- Lightbox: click a contact-sheet thumbnail to view it full-size floating over the
+     article; click anywhere (or press Escape) to dismiss. -->
+<script>
+  (() => {
+    const thumbs = document.querySelectorAll<HTMLImageElement>('.log-detail-body figure img, .log-hero img');
+    if (!thumbs.length) return;
+    let overlay: HTMLDivElement | null = null;
+    const remove = () => {
+      if (!overlay) return;
+      const el = overlay; overlay = null;
+      el.classList.remove('is-open');
+      document.removeEventListener('keydown', onKey);
+      setTimeout(() => el.remove(), 200);
+    };
+    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') remove(); }
+    const open = (src: string, alt: string, caption: string | null) => {
+      remove();
+      overlay = document.createElement('div');
+      overlay.className = 'log-lightbox';
+      const img = document.createElement('img');
+      img.src = src;
+      img.alt = alt || '';
+      overlay.appendChild(img);
+      if (caption) {
+        const c = document.createElement('p');
+        c.className = 'log-lightbox-cap';
+        c.textContent = caption;
+        overlay.appendChild(c);
+      }
+      overlay.addEventListener('click', remove);
+      document.body.appendChild(overlay);
+      requestAnimationFrame(() => overlay!.classList.add('is-open'));
+      document.addEventListener('keydown', onKey);
+    };
+    thumbs.forEach((img) => {
+      img.addEventListener('click', () => {
+        const fig = img.closest('figure');
+        const cap = fig && fig.querySelector('figcaption');
+        open(img.currentSrc || img.src, img.alt, cap && cap.textContent ? cap.textContent.trim() : null);
+      });
+    });
+  })();
+</script>
