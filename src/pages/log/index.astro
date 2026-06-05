@@ -1,0 +1,274 @@
+---
+import Base from '../../layouts/Base.astro';
+import LogArticle from '../../components/LogArticle.astro';
+import { getCollection } from 'astro:content';
+import { asset } from '../../lib/asset';
+
+// Reverse-chronological by `updated` (most recently updated first); ties fall back to
+// sortOrder so same-month studies keep a stable order. `updated` is free-text like
+// "May 2026" / "2024", which Date.parse handles; anything unparseable sorts last.
+const updatedTime = (u?: string) => {
+  const t = u ? Date.parse(u) : NaN;
+  return Number.isNaN(t) ? -Infinity : t;
+};
+const posts = (await getCollection('log', ({ data }) => !data.draft))
+  .sort((a, b) =>
+    (updatedTime(b.data.updated) - updatedTime(a.data.updated)) ||
+    ((b.data.sortOrder ?? 0) - (a.data.sortOrder ?? 0))
+  );
+const base = import.meta.env.BASE_URL;
+
+// Hover fill is one colour family now — the works red — rendered as a gradient DOWN the
+// menu: lightest at the top row, the original #8B0000 (hsl(0 100% 27%)) at the bottom.
+// Each box stays a solid shade; only the lightness steps with row position. (The script
+// re-runs this same ramp across whatever is visible after a filter / sort change.)
+const HOVER_L_BOTTOM = 27; // matches --color-accent-works (#8B0000)
+const HOVER_L_TOP = 60;    // lightest red, on the top row
+
+// Category facets for the filter bar, in a fixed display order; only those actually used
+// by a study are shown. Filtering + the date-order toggle run client-side (see <script>).
+const CATEGORY_ORDER = ['Patches & UI', 'Hardware & PCBs', 'Data & ML'] as const;
+// Facets actually used by at least one study (a study can sit under more than one).
+const categories = CATEGORY_ORDER.filter((c) => posts.some((p) => p.data.categories.includes(c)));
+---
+
+<Base
+  title="Log"
+  description="Engineering case-studies by Noah Berrie — the boards, firmware, DSP, and software behind the installations and instruments, told build-first."
+  path="/log/"
+  noindex={true}
+>
+  <div class="log-page">
+    {posts.length > 0 ? (
+      <div class="log-layout">
+        {/* LEFT — the menu of studies. Each row keeps a real href so it works on
+            mobile and without JS; on desktop the click is intercepted to open the
+            study in the right pane instead of navigating. */}
+        <div class="log-main">
+          <div class="log-main-inner">
+          <header class="log-header">
+            <h1 class="log-header-title">Log</h1>
+            <p class="log-standfirst">Build notes and case-studies.</p>
+          </header>
+
+          {/* Filter by category + toggle date order. Progressive: with no JS the full list
+              still shows newest-first; these controls enhance it client-side. */}
+          <div class="log-filters">
+            <div class="log-filter-group" role="group" aria-label="Filter studies by category">
+              <button type="button" class="log-filter is-active" data-filter="all" aria-pressed="true">All</button>
+              {categories.map((c) => (
+                <button type="button" class="log-filter" data-filter={c} aria-pressed="false">{c}</button>
+              ))}
+            </div>
+            <button type="button" class="log-sort" data-order="newest" aria-label="Sort studies by date, newest first">Newest first</button>
+          </div>
+
+          <ul class="log-list">
+            {posts.map((post, i) => {
+              const preview = post.data.thumb || post.data.hero || post.data.images[0];
+              // f: 0 at the bottom row, 1 at the top — drives the lightness ramp so the
+              // bottom keeps the original red and each row above is a step lighter.
+              const f = posts.length > 1 ? (posts.length - 1 - i) / (posts.length - 1) : 0;
+              const hoverL = Math.round(HOVER_L_BOTTOM + f * (HOVER_L_TOP - HOVER_L_BOTTOM));
+              return (
+                <li
+                  class="log-card"
+                  style={`--hover-accent: hsl(0 100% ${hoverL}%)`}
+                  data-preview={preview ? asset(preview) : ''}
+                  data-key={post.id}
+                  data-category={post.data.categories.join('|')}
+                  data-rotate={String(post.data.thumbRotate ?? 0)}
+                >
+                  <a href={`${base}log/${post.id}/`} class="log-card-link">
+                    {/* Menu shows just the short name — everything before the spaced dash.
+                        The full descriptive title still heads the opened article. */}
+                    {post.data.updated && <p class="log-card-date">{post.data.updated}</p>}
+                    <h2 class="log-card-title">{post.data.title.split(/\s+[—–]\s+/)[0]}</h2>
+                    {post.data.stack.length > 0 && (
+                      <p class="log-card-tools">{post.data.stack.join(' · ')}</p>
+                    )}
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+          </div>
+        </div>
+
+        {/* RIGHT — the viewer. The hover stage shows a study's image; clicking a study
+            reveals its full article here (pre-rendered, scrolls independently of the menu). */}
+        <div class="log-detail-col">
+          <div class="log-stage" aria-hidden="true"></div>
+          {posts.map((post) => (
+            <article class="log-detail log-panel" data-key={post.id} tabindex="-1">
+              <LogArticle post={post} titleAs="h2">
+                <button slot="eyebrow" type="button" class="log-detail-eyebrow log-panel-close">← All studies</button>
+              </LogArticle>
+            </article>
+          ))}
+        </div>
+      </div>
+    ) : (
+      <p class="placeholder">No entries yet.</p>
+    )}
+  </div>
+
+  <script>
+    // Two-pane master–detail. Desktop only (pointer + width); on touch / narrow screens
+    // the cards keep their plain anchors and navigate to the standalone /log/<slug>/ page.
+    const col = document.querySelector<HTMLElement>('.log-detail-col');
+    const stage = document.querySelector<HTMLElement>('.log-stage');
+    // Live media query (not a one-time snapshot): checked inside the handlers so the
+    // behavior follows viewport changes — resize past the breakpoint and the panels
+    // work without a reload; below it, cards fall back to plain-anchor navigation.
+    const mql = window.matchMedia('(hover: hover) and (min-width: 901px)');
+
+    if (col && stage) {
+      const cards = Array.from(document.querySelectorAll<HTMLElement>('.log-card'));
+      const panels = new Map<string, HTMLElement>();
+      document.querySelectorAll<HTMLElement>('.log-panel').forEach((p) => {
+        const k = p.getAttribute('data-key');
+        if (k) panels.set(k, p);
+      });
+
+      let openKey: string | null = null;
+
+      // Hover preview: reuse one <img> per study, crossfading on opacity. Suppressed
+      // while an article is open so a stray hover never wipes what you're reading.
+      const imgs = new Map<string, HTMLImageElement>();
+      let activeImg: string | null = null;
+      let z = 1;
+      const showPreview = (key: string, src: string, rot: number) => {
+        if (openKey !== null || key === activeImg) return;
+        if (activeImg && imgs.has(activeImg)) imgs.get(activeImg)!.classList.remove('is-active');
+        activeImg = key;
+        let img = imgs.get(key);
+        if (!img) {
+          img = document.createElement('img');
+          img.className = 'log-stage-img';
+          img.alt = '';
+          if (rot) img.style.setProperty('--rot', rot + 'deg');
+          img.src = src;
+          stage.appendChild(img);
+          imgs.set(key, img);
+        }
+        img.style.zIndex = String(++z);
+        const reveal = () => { if (activeImg === key) img!.classList.add('is-active'); };
+        if (img.complete) reveal();
+        else img.addEventListener('load', reveal, { once: true });
+      };
+
+      const setActiveCard = (key: string | null) => {
+        cards.forEach((card) => {
+          const on = card.getAttribute('data-key') === key;
+          card.classList.toggle('is-active', on);
+          const link = card.querySelector('.log-card-link');
+          if (on) link?.setAttribute('aria-current', 'true');
+          else link?.removeAttribute('aria-current');
+        });
+      };
+
+      const openPanel = (key: string) => {
+        const panel = panels.get(key);
+        if (!panel) return;
+        if (openKey && panels.has(openKey)) panels.get(openKey)!.classList.remove('is-open');
+        panel.classList.add('is-open');
+        col.classList.add('has-open');
+        col.scrollTop = 0;
+        openKey = key;
+        setActiveCard(key);
+        panel.focus({ preventScroll: true });
+      };
+
+      const closePanel = () => {
+        if (openKey && panels.has(openKey)) panels.get(openKey)!.classList.remove('is-open');
+        col.classList.remove('has-open');
+        openKey = null;
+        setActiveCard(null);
+        // Clear any hover preview too, so the re-revealed viewer doesn't keep showing
+        // the last study's floating image until the next hover.
+        if (activeImg && imgs.has(activeImg)) imgs.get(activeImg)!.classList.remove('is-active');
+        activeImg = null;
+      };
+
+      cards.forEach((card) => {
+        const key = card.getAttribute('data-key');
+        const src = card.getAttribute('data-preview');
+        const rot = parseFloat(card.getAttribute('data-rotate') || '0') || 0;
+        if (!key) return;
+        card.addEventListener('mouseenter', () => {
+          if (!mql.matches) return;
+          if (src) showPreview(key, src, rot);
+        });
+        card.querySelector('.log-card-link')?.addEventListener('click', (e) => {
+          if (!mql.matches) return;  // narrow / touch: let the anchor navigate to the standalone page
+          e.preventDefault();
+          if (openKey === key) { closePanel(); return; }
+          // Freeze this box's red shade onto its title + tools as the active marker.
+          card.style.setProperty('--active-accent', card.style.getPropertyValue('--hover-accent') || 'var(--color-accent-works)');
+          openPanel(key);
+        });
+      });
+
+      document.querySelectorAll<HTMLButtonElement>('.log-panel-close').forEach((btn) => {
+        btn.addEventListener('click', closePanel);
+      });
+    }
+
+    // ---- Filter (category) + sort (date) ------------------------------------------
+    // Independent of the panel logic above and of pointer type, so it works on mobile too.
+    // Each change re-appends the visible cards in view order (so DOM + tab order track what
+    // you see) and re-runs the red light→dark ramp across whatever is currently shown.
+    const list = document.querySelector<HTMLElement>('.log-list');
+    if (list) {
+      const allCards = Array.from(list.querySelectorAll<HTMLElement>('.log-card')); // canonical: newest-first
+      const filterBtns = Array.from(document.querySelectorAll<HTMLButtonElement>('.log-filter'));
+      const sortBtn = document.querySelector<HTMLButtonElement>('.log-sort');
+      const L_TOP = 60, L_BOTTOM = 27; // keep in step with the inline gradient above
+      let filter = 'all';
+      let order: 'newest' | 'oldest' = 'newest';
+
+      const render = () => {
+        // data-category is a '|'-joined facet list, so one study can match several filters.
+        let visible = allCards.filter((c) => filter === 'all' || (c.dataset.category || '').split('|').includes(filter));
+        if (order === 'oldest') visible = visible.slice().reverse();
+        allCards.forEach((c) => { c.hidden = true; c.style.removeProperty('--reveal-i'); });
+        const n = visible.length;
+        visible.forEach((c, i) => {
+          c.hidden = false;
+          list.appendChild(c); // move into view order
+          c.style.setProperty('--reveal-i', String(i)); // stagger step for the reveal
+          const f = n > 1 ? (n - 1 - i) / (n - 1) : 0;
+          c.style.setProperty('--hover-accent', `hsl(0 100% ${Math.round(L_BOTTOM + f * (L_TOP - L_BOTTOM))}%)`);
+        });
+        // Restart the staggered reveal so the boxes fade/rise in one after another.
+        list.classList.remove('is-revealing');
+        void list.offsetWidth; // reflow → the animation re-triggers on every change
+        list.classList.add('is-revealing');
+      };
+
+      filterBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          filter = btn.dataset.filter || 'all';
+          filterBtns.forEach((b) => {
+            const on = b === btn;
+            b.classList.toggle('is-active', on);
+            b.setAttribute('aria-pressed', String(on));
+          });
+          // Close any open detail panel: the new filter may hide its card, which would
+          // otherwise leave the viewer showing a study no longer in the list.
+          document.querySelector<HTMLButtonElement>('.log-panel.is-open .log-panel-close')?.click();
+          render();
+        });
+      });
+
+      sortBtn?.addEventListener('click', () => {
+        order = order === 'newest' ? 'oldest' : 'newest';
+        sortBtn.dataset.order = order;
+        sortBtn.textContent = order === 'newest' ? 'Newest first' : 'Oldest first';
+        sortBtn.setAttribute('aria-label', `Sort studies by date, ${order} first`);
+        render();
+      });
+    }
+  </script>
+</Base>
