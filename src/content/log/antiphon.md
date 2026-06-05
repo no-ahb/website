@@ -17,7 +17,7 @@ draft: false
 
 I recorded a string quintet, playing through an "orchestra of objects" — cymbals, gongs, piano frames, sheets of metal and paper — with extended-range microphones that capture well above the limit of human hearing.
 
-I then analyzed and mapped those recordings and wrote a program to traverse the map with 14 paired-yet-distinct voices for a fourteen-speaker room. It was shown at the [Haus für Medienkunst](https://hausmedienkunst.de/en/) in Oldenburg from March through May 2026, alongside [Suspension](/log/suspension/) and [FUNDAMENTAL](/log/fundamental/).
+I then analyzed and mapped those recordings and wrote a program to traverse the map with 14 paired-yet-distinct voices for a fourteen-speaker room. It was shown at the [Haus für Medienkunst](https://hausmedienkunst.de/en/) in Oldenburg from March through May 2026, alongside [Suspension](/log/suspension/) and [FUNDAMENTAL](/works/fundamental/).
 
 ## Recording the corpus
 
