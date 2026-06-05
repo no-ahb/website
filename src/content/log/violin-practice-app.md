@@ -3,7 +3,7 @@ title: "Violin Practice"
 subtitle: "A no-framework, offline-first PWA"
 summary: "A daily-practice web app I designed from an 846-line spec and now use every day: vanilla JS, Web Audio, IndexedDB, offline-first — no framework, no backend, no build step."
 updated: "May 2026"
-category: "Patches & UI"
+categories: ["Patches & UI"]
 sortOrder: 10
 tags: ["software", "web-audio", "pwa"]
 stack: ["Vanilla JS", "Web Audio API", "IndexedDB", "Service Worker", "VexFlow", "MediaRecorder"]

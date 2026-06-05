@@ -3,7 +3,7 @@ title: "Infinite Bach"
 subtitle: "Training a small neural net to mix a cello"
 summary: "For cellist Maya Beiser, I trained a small neural network to mix her cello: it maps a 2-D control pad to a full multi-mic EQ mix, interpolating between a handful of corner mixes I set by hand."
 updated: "November 2022"
-category: "Data & ML"
+categories: ["Data & ML"]
 sortOrder: 16
 tags: ["ml", "max-msp", "audio"]
 stack: ["Max/MSP", "Max for Live", "FluCoMa", "Ableton Live"]

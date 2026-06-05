@@ -28,11 +28,8 @@ const HOVER_L_TOP = 60;    // lightest red, on the top row
 // Category facets for the filter bar, in a fixed display order; only those actually used
 // by a study are shown. Filtering + the date-order toggle run client-side (see <script>).
 const CATEGORY_ORDER = ['Patches & UI', 'Hardware & PCBs', 'Data & ML'] as const;
-// A study's facets: the `categories` array when set, otherwise its single `category`. Lets one
-// entry (e.g. North Sea — hardware + data) appear under more than one filter.
-const facetsOf = (p: (typeof posts)[number]) =>
-  p.data.categories?.length ? p.data.categories : (p.data.category ? [p.data.category] : []);
-const categories = CATEGORY_ORDER.filter((c) => posts.some((p) => facetsOf(p).includes(c)));
+// Facets actually used by at least one study (a study can sit under more than one).
+const categories = CATEGORY_ORDER.filter((c) => posts.some((p) => p.data.categories.includes(c)));
 ---
 
 <Base
@@ -79,7 +76,7 @@ const categories = CATEGORY_ORDER.filter((c) => posts.some((p) => facetsOf(p).in
                   style={`--hover-accent: hsl(0 100% ${hoverL}%)`}
                   data-preview={preview ? asset(preview) : ''}
                   data-key={post.id}
-                  data-category={facetsOf(post).join('|')}
+                  data-category={post.data.categories.join('|')}
                   data-rotate={String(post.data.thumbRotate ?? 0)}
                 >
                   <a href={`${base}log/${post.id}/`} class="log-card-link">

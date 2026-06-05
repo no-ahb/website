@@ -3,7 +3,7 @@ title: "Interval II"
 subtitle: "Twelve strings and a deterministic, non-repeating wave field"
 summary: "Twelve vibration motors excite piano strings along a wall, driven by a Raspberry Pi Pico running a generative algorithm: a wandering cursor over a scrambled string order, shaped by two prime-period oscillators so the pattern never settles."
 updated: "March 2026"
-category: "Hardware & PCBs"
+categories: ["Hardware & PCBs"]
 sortOrder: 12
 tags: ["hardware", "firmware", "generative"]
 stack: ["Raspberry Pi Pico", "MicroPython", "PWM", "MOSFET drivers", "EasyEDA PCB"]
