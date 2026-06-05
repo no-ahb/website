@@ -35,11 +35,20 @@ export default defineConfig({
   output: 'static',
   trailingSlash: 'always',
   integrations: [
-    sitemap(),
+    // Exclude /log/* from the sitemap during the pre-launch noindex window.
+    // Remove this filter (and the noindex flags on the /log routes) at launch.
+    // Anchored to the path so it can't accidentally match a future route that merely
+    // contains "/log/" (e.g. /changelog/, /devlog/).
+    sitemap({ filter: (page) => !new URL(page).pathname.startsWith('/log/') }),
     stripHtmlComments(),
   ],
   build: {
     assets: '_assets',
+  },
+  markdown: {
+    // Light syntax highlighting to match the site. Shiki defaults to a dark theme
+    // whose inline background would otherwise override the code-block styling in main.css.
+    shikiConfig: { theme: 'github-light' },
   },
   vite: {
     css: {

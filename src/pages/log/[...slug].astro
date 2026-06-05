@@ -1,0 +1,54 @@
+---
+import Base from '../../layouts/Base.astro';
+import LogArticle from '../../components/LogArticle.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('log', ({ data }) => !data.draft);
+  return posts.map((post) => ({
+    params: { slug: post.id },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const siteUrl = Astro.site?.origin ?? 'https://noahberrie.com';
+const base = import.meta.env.BASE_URL;
+
+// Social/SEO image: prefer the hero, then the first body image, then the index
+// thumb, so heroless studies still get a representative card, not the site default.
+const ogImage = post.data.hero || post.data.images[0] || post.data.thumb;
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": post.data.title,
+  "description": post.data.summary,
+  "author": {
+    "@type": "Person",
+    "name": "Noah Berrie",
+    "url": siteUrl,
+  },
+  "url": `${siteUrl}/log/${post.id}/`,
+  // `updated` is free-text (e.g. "March 2026") — omit it rather than emit an invalid
+  // schema.org Date. Add a real ISO date field if dateModified is ever needed.
+  ...(ogImage && { "image": `${siteUrl}${ogImage}` }),
+  ...(post.data.stack.length > 0 && { "keywords": post.data.stack.join(', ') }),
+};
+---
+
+<Base
+  title={post.data.title}
+  description={post.data.summary}
+  path={`/log/${post.id}/`}
+  image={ogImage}
+  type="article"
+  noindex={true}
+>
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd).replace(/</g, '\\u003c')} />
+
+  <article class="log-detail">
+    <LogArticle post={post} heroLoading="eager">
+      <p slot="eyebrow" class="log-detail-eyebrow"><a href={`${base}log/`}>← Log</a></p>
+    </LogArticle>
+  </article>
+</Base>
