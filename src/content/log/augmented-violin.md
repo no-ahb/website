@@ -7,7 +7,6 @@ categories: ["Data & ML"]
 sortOrder: 7
 tags: ["dsp", "max-msp", "ml", "sensors"]
 stack: ["Max/MSP", "FluCoMa", "BNO055 IMU", "Teensy", "Ableton Live"]
-project: "/works/violin-improvisation-system/"
 hero: "/images/violin-system/01-hero.png"
 thumb: "/images/log/augmented-violin/imu-glove.jpg"
 draft: false
