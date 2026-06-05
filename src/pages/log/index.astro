@@ -185,6 +185,10 @@ const categories = CATEGORY_ORDER.filter((c) => posts.some((p) => p.data.categor
         col.classList.remove('has-open');
         openKey = null;
         setActiveCard(null);
+        // Clear any hover preview too, so the re-revealed viewer doesn't keep showing
+        // the last study's floating image until the next hover.
+        if (activeImg && imgs.has(activeImg)) imgs.get(activeImg)!.classList.remove('is-active');
+        activeImg = null;
       };
 
       cards.forEach((card) => {
@@ -251,6 +255,9 @@ const categories = CATEGORY_ORDER.filter((c) => posts.some((p) => p.data.categor
             b.classList.toggle('is-active', on);
             b.setAttribute('aria-pressed', String(on));
           });
+          // Close any open detail panel: the new filter may hide its card, which would
+          // otherwise leave the viewer showing a study no longer in the list.
+          document.querySelector<HTMLButtonElement>('.log-panel.is-open .log-panel-close')?.click();
           render();
         });
       });
