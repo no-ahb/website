@@ -1,7 +1,7 @@
 ---
-title: "Variable Loops and FDNs"
-subtitle: "Live performance system for solo violin"
-summary: "A live-performance instrument in SuperCollider: one violin feeds a network of self-modulating variable delays that sustains and spatializes it across multiple channels — no buffers, no loop boundaries."
+title: "Live DSP"
+subtitle: "Variable looper and feedback delay network for solo violin"
+summary: "A live-performance instrument in SuperCollider: one violin feeds a self-modulating matrix of feedback delays and a bank of variable-length loops that sustain and spatialize it across multiple channels."
 updated: "May 2026"
 categories: ["Patches & UI"]
 sortOrder: 18
@@ -15,17 +15,17 @@ audioFiles:
 draft: false
 ---
 
-This is the system I perform with. Violin, a four-button foot pedal, and a network of modulated delays in [SuperCollider](https://supercollider.github.io/).
+## Approach
 
-## Variable Loops & Feedback Delay Networks
+For my performance at the Long Night of Music in Oldenburg, I wanted something, a looper that was loose and unpredictable (I find that loop-and-layer performances tend toward predictable repetition and rising density) that would still allow me to build layers of sound as a solo player.
 
-The usual way to loop is with a buffer: hold to record, release, and it plays back what you captured. That always felt too linear to me. Loop-and-layer performance tends to push in one direction, toward predictable repetition and rising density, and I wanted something that would keep moving on its own.
+I turned to [SuperCollider](https://supercollider.github.io/), a normally unwieldy but powerful tool for algorithmic composition and real-time DSP. With AI, the development overhead (across both skill and time) for programming custom patches from scratch decreases tremendously, allowing for rapid prototyping with previously inaccessible flexibility.
 
-This is not a new idea. Variable looping grows out of tape-delay experiments from the 1960s onward. [Terry Riley](https://en.wikipedia.org/wiki/Terry_Riley) built sustaining textures by feeding two tape machines back into each other, working in the same [San Francisco Tape Music Center](https://en.wikipedia.org/wiki/San_Francisco_Tape_Music_Center) circle that [Pauline Oliveros](https://en.wikipedia.org/wiki/Pauline_Oliveros) came out of. [Brian Eno](https://en.wikipedia.org/wiki/Brian_Eno) took the technique further on [(No Pussyfooting)](<https://en.wikipedia.org/wiki/(No_Pussyfooting)>) with [Robert Fripp](https://en.wikipedia.org/wiki/Robert_Fripp) in 1973: two [Revox A77](https://en.wikipedia.org/wiki/Revox) reel-to-reel machines set a short distance apart, the record head of one feeding the playback head of the other, the second machine's output fed back to the first. The gap between the decks set the delay, roughly three to six seconds, and each pass decayed a little. Fripp played guitar over the loop and later named the rig [Frippertronics](https://en.wikipedia.org/wiki/Frippertronics). He once described it as "a way for one person to make an awful lot of noise."
+I was interested in variable looping from reading about [Pauline Oliveros](https://en.wikipedia.org/wiki/Pauline_Oliveros)'s Expanded Instrument System (EIS) from the early ’90s and 2000s. The EIS is a performer-controlled network of delays and signal processing, meant as an improvising environment for acoustic players. Oliveros called it "an elaboration of my old tape delay systems from the '60s"; she thought of it as a kind of time machine, a way to hear past, present, and future at once. The digital version ran as many as forty delays whose times and spatialization fluctuate within ranges she sets during the performance with foot pedals.
 
-The matrix here owes most to Oliveros's Expanded Instrument System, which she developed over decades, from 1960s tape delays to outboard [Lexicon](<https://en.wikipedia.org/wiki/Lexicon_(company)>) units to software. The EIS is a performer-controlled network of delays and signal processing, meant as an improvising environment for acoustic players. Oliveros called it "an elaboration of my old tape delay systems from the '60s"; early on she hauled reel-to-reel machines from venue to venue. She thought of it as a kind of time machine, a way to hear past, present, and future at once, "simultaneously with transformations." The digital version ran as many as forty delays whose times and spatialization fluctuate within ranges she sets during the performance, doing what a player's hands and feet cannot, with foot pedals to shift those parameters mid-piece. The parallels to what I built are direct: a bank of modulated delays, performer-set ranges, foot-pedal control, multichannel spread, and the past folded back into the present.
+Her work (and mine) is rooted in tape-delay experiments of the 1960s, from [Terry Riley](https://en.wikipedia.org/wiki/Terry_Riley)'s work at the [San Francisco Tape Music Center](https://en.wikipedia.org/wiki/San_Francisco_Tape_Music_Center) to [Brian Eno](https://en.wikipedia.org/wiki/Brian_Eno) and [Robert Fripp](https://en.wikipedia.org/wiki/Robert_Fripp)'s experiments in the 1970s. Fripp once described his system as "a way for one person to make an awful lot of noise."
 
-In signal-processing terms the result is a feedback delay network: a set of delay lines whose outputs feed back into one another through a matrix of gains, the same structure used in algorithmic reverbs. In this patch the matrix runs in parallel with a second layer, a bank of independent loop voices. Both feed a multichannel output.
+My system uses stacked delay lines whose outputs feed back into one another. This delay matrix runs in parallel with a second layer for recycling live sound, a bank of up to 24 independent variable-length loops. Both feed an arbitrary number of channels with adaptable multichannel panning and delays.
 
 ```
 violin
@@ -48,11 +48,9 @@ violin
 N speakers
 ```
 
-## How it's built
+## Details
 
-Two layers run in parallel.
-
-The delay matrix has three banks: short, medium, and long. Each bank holds one delay tap per output channel, so four taps each in the quad layout. Within a bank, every tap cross-feeds the others. The banks do not feed each other.
+The delay matrix has three layers: short, medium, and long. Each layer has one tap per output channel, meaning that a four-channel setup will have twelve distinct delays. The delays couple across channels within a layer.
 
 ```supercollider
 var layers = [
@@ -62,29 +60,19 @@ var layers = [
 ];
 ```
 
-Each row is `[delay min, delay max, feedback min, feedback max]`. The delay time for each tap is drawn once at startup and then held fixed. I had the times sweeping at first, but a moving read pointer bends pitch like tape Doppler, and that was not what I wanted, so the times stay put. The motion comes from elsewhere. Each tap's feedback amount wanders on its own slow random LFO between that bank's limits, and each cross-feed gain wanders too, between three and twenty percent. So the matrix never settles into one resonance. Its coupling keeps drifting: a tap strongly tied to one neighbor slowly loosens and re-ties to another over tens of seconds. The whole matrix feedback is scaled to 85 percent of nominal and every tap is soft-clipped, which is what keeps it from running away.
+Each delay's feedback amount wanders on its own slow random LFO, and each cross-feed gain wanders too, between three and twenty percent. So the matrix never settles into one pattern and the gravity of the system keeps drifting.
 
-On top of that, each voice is an independent loop line. Up to twenty-four run at once in a fixed slot grid; arm a twenty-fifth and the quietest voice is dropped to make room. A voice recirculates through `LocalIn` and `LocalOut` with feedback clamped just under one. A DC blocker and that clamp are what stop it running away. The feedback is not constant either: a slow per-voice LFO breathes it by about plus or minus 0.04 under the ceiling, so no two loops decay at the same rate.
+The next layer is up to twenty-four loopers. Each loop duration is randomly chosen between 10 and 60 seconds. Every voice is panned around the speaker ring with `PanAz`, each on its own slow LFO, so loops drift independently in space. Each loop is filtered a little further on every pass, like tape, so it darkens and decays over time. If all twenty-four slots are full, arming a new loop drops the quietest to make room. Once a loop degrades below a certain threshold of amplitude it is automatically removed.
 
-```supercollider
-fbIn     = LocalIn.ar(1);
-mixed    = LeakDC.ar(input + (fbIn * (feedback + fbMod).clip(0, 0.97)));
-delayed  = DelayC.ar(mixed, 65, (baseDelay + timeMod).max(0.01));   // DelayC: no clicks under modulation
-filtered = HPF.ar(LPF.ar(delayed, cutoff), 120);
-LocalOut.ar(filtered);
-```
+Finally, there are the effects. OCTAVE is an octave-shifter with an adjustable grain window that tightens on attacks. DISTORT is a wavefolding fuzz with an octave-up rectifier layered in, gain-matched so engaging it does not jump volume. A double-tap on DISTORT applies a tremolo, a swept dual-delay. DELAY engages the stacked delay matrix. Holding LOOP records a voice, a double-tap on LOOP starts a granular freeze, and a short tap cancels the last freeze. Holding the left pair of pedals drops the most recent loop; holding the right pair clears everything.
 
-Each loop length is drawn between ten and sixty seconds, so a phrase might return in a few seconds or wait the better part of a minute. Every voice is panned around the speaker ring with `PanAz`, each on its own slow LFO, so each loop holds a position and drifts independently rather than reading as one block. The matrix taps do not drift: each bank lays one tap on each channel, so the wash is spread across the ring but anchored. The channel count is a single constant. I run the same patch at two channels on headphones and four for a quad ring.
+Reverse & Granular Freeze were two later additions for still more variety. About 7% of loops also spawn a reverse layer, the same captured window played backward and high-passed down to a thin shimmer. The granular freeze takes a short captured window and granulates it into a sustained tone that creeps in over a few seconds and decays over half a minute or so; double-taps stack new layers on top. Everything else stays bounded inside the loops: `LeakDC`, the feedback clamp, the per-tap soft-clip, and the trim on the matrix feedback.
 
-There are also effects. OCTAVE is an octave-down whose grain window tightens on attacks, down to about 50 milliseconds for tight tracking, and opens to about 200 on sustains so it stays smooth. DISTORT is a wavefolding fuzz with an octave-up rectifier layered in, gain-matched so engaging it does not jump the level; a double-tap on DISTORT swaps in a tremolo instead, a swept dual-delay whose crossfade reads as an amplitude warble. DELAY engages the matrix. Holding LOOP records a voice, a double-tap on LOOP starts a granular freeze, and a short tap cancels the last freeze. Holding the left pair of pedals drops the most recent loop; holding the right pair clears everything. Whatever is on when I arm a loop is baked into it.
+## GUI
 
-Two later additions break the no-buffer rule. About seven percent of armed loops also spawn a reverse layer, the same captured window played backward and high-passed down to a thin shimmer. The granular freeze takes a short captured window and granulates it into a sustained tone that creeps in over a few seconds and decays over half a minute or so; double-taps stack new layers on top. Everything else stays bounded inside the loops: `LeakDC`, the feedback clamp, the per-tap soft-clip, the trim on the matrix feedback.
+This is a lot to keep track of, especially while improvising live. Hence the simple, easy-to-read GUI. I built it from `Pen` primitives using a minimalist warm paper ground, black ink, and color where something is happening to draw attention.
 
-## The interface
-
-I have to read the GUI at a glance while bowing, to see the state of the system in more detail than I can always hear. Every widget is hand-drawn. I built all of them from `Pen` primitives so the whole surface follows one grammar: a warm paper ground, a warm near-black ink, and color only where something is happening.
-
-The grid of loopers takes up most of the panel. Each circle is one loop. A pan ring carries a dot that orbits to show where the voice sits in the 360-degree field and swells with its level. A loop ring fills like a clock face as the loop records, red while recording, then the voice's own color, with a dot that circles at the playback position so I can see when what I just played will come back. A feedback gauge reads the current value, usually near 0.97. An X kills the voice. A reverse layer shows as a faint dot running the other way around the same ring. The slot where the next loop will land breathes in a slow half-wave pulse that relaxes fully to nothing between beats, its hue drifting through the voice colors.
+The grid of loopers takes up most of the interface. Each circle is one loop. A pan ring carries a dot that orbits to show where the voice sits in the 360-degree field and swells with its level. A loop ring fills like a clock face as the loop records, red while recording, then the voice's own color, with a dot that circles at the playback position so I can see when what I just played will come back. A reverse layer shows as a faint dot running the other way around the same ring. The slot where the next loop will land breathes in a slow half-wave pulse that relaxes fully to nothing between beats, its hue drifting through the voice colors.
 
 ```supercollider
 // the loop ring: a colored arc fills as the loop records,
@@ -97,11 +85,9 @@ Pen.addArc((cx + (r*cos(a))) @ (cy + (r*sin(a))), 3.6 + (amp * 1.4), 0, 2pi);  /
 Pen.fill;
 ```
 
-State changes ease in over about a fifth of a second. The orbiting dots interpolate between telemetry frames, and nothing moves faster than about a hertz. The panel is dense, up to twenty-four voices, each with its position, phase, level, and feedback, plus a per-speaker meter and the pedal row. It stays calm, because nothing blinks and nothing is colored unless it is alive. It mirrors the music: complex but slow.
+## Future Dev
 
-## Why this way
-
-I have worked with buffer loopers, pitch tracking, and machine-listening control, and found that modulated delays are a stronger and more controllable way to build density with a lot of nuance. One gesture sets off a self-sustaining, self-animating loop as a side effect of the delay physics. The long-term plan is to strip the GUI and run it headless on a [Bela](https://bela.io/) or a [Pi](https://en.wikipedia.org/wiki/Raspberry_Pi) with LED indicators, and drop the laptop and the screen entirely.
+Next steps for this project are to strip the GUI entirely and run it headless on a [Bela](https://bela.io/) or a [Pi](https://en.wikipedia.org/wiki/Raspberry_Pi) with LED indicators to perform with custom hardware instead of a laptop. This is another advantage of using barebones programmatic tools like SuperCollider!
 
 ## Listen
 

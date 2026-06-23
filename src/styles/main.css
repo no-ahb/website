@@ -1063,48 +1063,6 @@ hr {
 }
 .log-standfirst { max-width: 38rem; color: var(--color-text); line-height: 1.55; }
 
-/* Filter + sort bar: category chips + a date-order toggle, between the header and the list.
-   Its bottom rule (.log-filters::after) lines up with the card rules and runs to the divider. */
-.log-filters {
-  position: relative;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.6rem 1rem;
-  padding: 0 1.25rem 1rem;
-}
-.log-filter-group { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-.log-filter,
-.log-sort {
-  font: inherit;
-  font-size: 0.72rem;
-  color: var(--color-meta);
-  background: none;
-  cursor: pointer;
-  appearance: none;
-  -webkit-appearance: none;
-  transition: color 0.2s ease, border-color 0.2s ease;
-}
-/* Category facets are little outlined boxes; hover / selected ink the border and the label. */
-.log-filter {
-  line-height: 1.3;
-  border: 1px solid color-mix(in srgb, var(--color-rule) 30%, transparent);
-  padding: 0.32rem 0.55rem;
-}
-.log-filter:hover { color: var(--color-title); border-color: var(--color-rule); }
-.log-filter.is-active { color: var(--color-title); border-color: var(--color-rule); font-weight: 500; }
-/* The date order stays a plain text toggle, not a box. */
-.log-sort {
-  border: 0;
-  padding: 0;
-  white-space: nowrap;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-.log-sort:hover { color: var(--color-title); }
-.log-sort::after { content: " ⇅"; }
-
 /* Index: a two-pane master–detail. The left column is a menu of studies separated
    by the same dark rule as the rest of the page furniture; the right column is the
    viewer — a hover-preview image by default, or the full study once one is clicked.
@@ -1116,9 +1074,16 @@ hr {
 .log-layout {
   position: relative;
   display: grid;
-  grid-template-columns: 17rem minmax(0, 1fr);  /* tight menu · viewer fills the remaining width */
-  height: calc(100vh - 5rem);                    /* fill the viewport inside .site-main padding */
+  /* Menu boxes in a 2-column grid (LOG box + 5 studies). --sqh (≈ box height) drives --sqw,
+     a hair wider so the boxes read as square. Equal 2rem cushions top and bottom: the site-main
+     2rem top padding + a 2rem bottom (below), with the grid filling 100vh − 4rem between them. */
+  --sqh: max(7rem, calc((100vh - 4rem) / 3));   /* 3 rows: LOG box + 5 studies, in a 2-column grid */
+  --sqw: calc(var(--sqh) * 1.05);
+  grid-template-columns: calc(var(--sqw) * 2) minmax(0, 1fr);
+  height: calc(100vh - 4rem);
 }
+/* /log gets a bottom cushion equal to its 2rem top one, so the grid is inset symmetrically. */
+.site-main:has(.log-page) { padding-bottom: 2rem; }
 .log-main {
   min-width: 0;
   height: 100%;
@@ -1166,8 +1131,10 @@ hr {
   position: absolute;
   inset: 0;
   pointer-events: none;
+  transition: opacity 0.45s ease;
 }
-.log-detail-col.has-open .log-stage { display: none; }
+/* Fade (don't snap) the hover image out as the clicked study's text drops in over it. */
+.log-detail-col.has-open .log-stage { opacity: 0; }
 .log-stage-img {
   position: absolute;
   top: 50%;
@@ -1186,9 +1153,26 @@ hr {
 .log-stage-img.is-active { opacity: 1; }
 
 /* Inline study panels — pre-rendered, one shown at a time (desktop only) */
-.log-panel { display: none; }
+.log-panel { display: none; opacity: 1; transition: opacity 0.6s ease; }
 .log-panel.is-open { display: block; }
+/* Deselecting fades the open study out slowly before it's removed (see closePanel). */
+.log-panel.is-closing { opacity: 0; pointer-events: none; }
 .log-panel:focus { outline: none; }
+
+/* Open transition: the clicked study's blocks each drop down from just above and fade in,
+   staggered top-to-bottom (--reveal-i is set per block in the index script) while the hover
+   image beneath fades out. Reduced-motion users get the content with no movement. */
+@keyframes log-block-in {
+  from { opacity: 0; transform: translateY(-16px); }
+  to   { opacity: 1; transform: none; }
+}
+.log-reveal-block {
+  animation: log-block-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(min(var(--reveal-i, 0), 10) * 50ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  .log-reveal-block { animation: none; }
+}
 /* Inline, the study fills the viewer column left-aligned (not the centered 74rem reading
    cap the standalone page uses): the body text uses the full width and, with a fixed left
    edge, the header/footer rules line up with the divider. --log-wide:100% drives the
@@ -1212,15 +1196,26 @@ hr {
 .log-panel-close:hover { color: var(--color-accent-log); }
 
 @media (max-width: 900px), (hover: none) {
-  /* Collapse to one scrolling list; the standalone /log/<slug>/ pages serve detail. */
+  /* Single column of boxes. Tapping a box opens the standalone /log/<slug>/ page — the inline
+     two-pane viewer is desktop-only. A 1px gap over a rule-coloured backdrop draws the box
+     separators, same trick as the desktop grid. */
   .log-layout { display: block; height: auto; }
   .log-main { height: auto; overflow: visible; }
   .log-detail-col { display: none; }
-  .log-layout::before, .log-layout::after { display: none; }  /* no frame lines in the single-column list */
-  .log-header, .log-filters, .log-card-link { padding-left: 0; padding-right: 0; }
+  .log-main-inner::before, .log-main-inner::after { display: none; }  /* no two-pane frame lines */
+  .log-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1px;
+    background: var(--color-rule);
+    border: 1px solid var(--color-rule);
+  }
+  .log-card, .log-title-box { background: var(--color-bg); }
+  .log-card::after { display: none; }
+  .log-title-box { padding: 1.5rem 1.25rem; }
 }
 
-.log-list { list-style: none; display: flex; flex-direction: column; }
+.log-list { list-style: none; }
 /* Staggered reveal: when the filter / sort changes, the visible boxes fade and rise in one
    after another. The script sets --reveal-i per row and re-triggers by toggling .is-revealing;
    the global prefers-reduced-motion rule zeroes the duration and the delay is cleared below. */
@@ -1238,29 +1233,45 @@ hr {
 /* Row + header separators: full-width hairlines that run to the divider. A 1px bar
    scaled to 0.5 renders a true 1-device-pixel line on hi-DPR (a plain 0.5px border
    gets rounded back up to 1px by Chrome). */
-.log-card { position: relative; background-color: transparent; }
-.log-filters::after,
-.log-card::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 1px;
-  background: var(--color-rule);
-  transform: scaleY(0.5);
-  transform-origin: bottom;
-  pointer-events: none;
-}
+.log-card { position: relative; background-color: var(--color-bg); }
 .log-card-link { display: block; padding: 1.5rem 1.25rem; text-decoration: none; color: inherit; }
-/* Date eyebrow — a clear "Month YYYY" over each title (the menu's primary date cue now that
-   studies are also filterable/sortable by it). */
+/* Uniform square boxes (desktop two-pane only): each card is a 1:1 box the width of the menu
+   column, its content vertically centred. On touch / single-column the cards keep natural height. */
+@media (hover: hover) and (min-width: 901px) {
+  /* Two-column grid of boxes: the LOG title is the first box, then the 5 studies — 2 columns ×
+     3 rows that fill the menu height (1fr rows ⇒ flush to the bottom). The 1px gap over a
+     rule-coloured backdrop draws the grid; boxes are a hair wider than tall so they read square. */
+  .log-main-inner { height: 100%; }
+  .log-main-inner::before, .log-main-inner::after { display: none; }  /* the grid border replaces the frame lines */
+  .log-list {
+    height: 100%;
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--color-rule);
+    border: 1px solid var(--color-rule);
+  }
+  .log-card, .log-title-box { background: var(--color-bg); }
+  .log-card::after { display: none; }  /* the gaps are the separators now */
+  .log-card-link, .log-title-box {
+    height: 100%;
+    padding: 1rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    overflow: hidden;
+  }
+}
+/* Date line — a clear "Month YYYY" under each title. */
 .log-card-date {
-  font-size: 0.66rem;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--color-meta);
-  margin: 0 0 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--color-title);
+  margin: 0.3rem 0 0;
 }
 .log-card-title {
   font-size: 1.25rem;
@@ -1268,14 +1279,13 @@ hr {
   color: var(--color-title);
   margin: 0;
 }
-/* Tools used — a quiet middot-separated line in the menu, in place of the boxed chips
-   and the gray date (both read as clutter at this size). */
+/* Tools used — a middot-separated line of the build stack under each title. */
 .log-card-tools {
   margin-top: 0.5rem;
   font-size: 0.72rem;
   line-height: 1.55;
   letter-spacing: 0.02em;
-  color: var(--color-meta);
+  color: var(--color-text);
 }
 
 /* Desktop only. Each box's hover fill is a fixed shade of the works red (--hover-accent,
@@ -1294,10 +1304,11 @@ hr {
   .log-card:hover .log-card-title,
   .log-card:hover .log-card-tools,
   .log-card:hover .log-card-date { transition: none; }
-  /* Open box: NOT filled — its date + title + tools freeze to the shade it was opened with. */
+  /* Selected box: stays filled in the shade it was opened with, white text — same as hover. */
+  .log-card.is-active { background-color: var(--active-accent, var(--color-accent-works)); }
   .log-card.is-active .log-card-title,
   .log-card.is-active .log-card-tools,
-  .log-card.is-active .log-card-date { color: var(--active-accent, var(--color-accent-works)); }
+  .log-card.is-active .log-card-date { color: #fff; }
   /* Hover: fill the box with crisp white text. Listed last so white wins over the frozen
      colour while hovering; opacity:1 overrides the global a:hover dimming. */
   .log-card:hover { background-color: var(--hover-accent, var(--color-accent-works)); }
@@ -1371,7 +1382,7 @@ hr {
 .log-hero.log-hero--contain img { width: auto; max-width: 100%; object-fit: contain; margin-inline: auto; }
 
 /* Body spans the full article; running text below is re-constrained to the reading measure */
-.log-detail-body { line-height: 1.62; color: var(--color-text); }
+.log-detail-body { font-size: 1.08rem; line-height: 1.62; color: var(--color-text); }
 .log-detail-body > :first-child { margin-top: 0; }
 .log-detail-body p { margin: 0 0 1.4rem; }
 .log-detail-body :is(h2, h3) { color: var(--color-title); margin: 2.75rem 0 1rem; }
