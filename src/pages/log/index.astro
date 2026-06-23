@@ -20,16 +20,9 @@ const base = import.meta.env.BASE_URL;
 
 // Hover fill is one colour family now — the works red — rendered as a gradient DOWN the
 // menu: lightest at the top row, the original #8B0000 (hsl(0 100% 27%)) at the bottom.
-// Each box stays a solid shade; only the lightness steps with row position. (The script
-// re-runs this same ramp across whatever is visible after a filter / sort change.)
+// Each box stays a solid shade; only the lightness steps with row position.
 const HOVER_L_BOTTOM = 27; // matches --color-accent-works (#8B0000)
 const HOVER_L_TOP = 60;    // lightest red, on the top row
-
-// Category facets for the filter bar, in a fixed display order; only those actually used
-// by a study are shown. Filtering + the date-order toggle run client-side (see <script>).
-const CATEGORY_ORDER = ['Patches & UI', 'Hardware & PCBs', 'Data & ML'] as const;
-// Facets actually used by at least one study (a study can sit under more than one).
-const categories = CATEGORY_ORDER.filter((c) => posts.some((p) => p.data.categories.includes(c)));
 ---
 
 <Base
@@ -46,24 +39,11 @@ const categories = CATEGORY_ORDER.filter((c) => posts.some((p) => p.data.categor
             study in the right pane instead of navigating. */}
         <div class="log-main">
           <div class="log-main-inner">
-          <header class="log-header">
-            <h1 class="log-header-title">Log</h1>
-            <p class="log-standfirst">Build notes and case-studies.</p>
-          </header>
-
-          {/* Filter by category + toggle date order. Progressive: with no JS the full list
-              still shows newest-first; these controls enhance it client-side. */}
-          <div class="log-filters">
-            <div class="log-filter-group" role="group" aria-label="Filter studies by category">
-              <button type="button" class="log-filter is-active" data-filter="all" aria-pressed="true">All</button>
-              {categories.map((c) => (
-                <button type="button" class="log-filter" data-filter={c} aria-pressed="false">{c}</button>
-              ))}
-            </div>
-            <button type="button" class="log-sort" data-order="newest" aria-label="Sort studies by date, newest first">Newest first</button>
-          </div>
-
           <ul class="log-list">
+            <li class="log-title-box">
+              <h1 class="log-header-title">Log</h1>
+              <p class="log-standfirst">Build notes and case-studies.</p>
+            </li>
             {posts.map((post, i) => {
               const preview = post.data.thumb || post.data.hero || post.data.images[0];
               // f: 0 at the bottom row, 1 at the top — drives the lightness ramp so the
@@ -76,14 +56,13 @@ const categories = CATEGORY_ORDER.filter((c) => posts.some((p) => p.data.categor
                   style={`--hover-accent: hsl(0 100% ${hoverL}%)`}
                   data-preview={preview ? asset(preview) : ''}
                   data-key={post.id}
-                  data-category={post.data.categories.join('|')}
                   data-rotate={String(post.data.thumbRotate ?? 0)}
                 >
                   <a href={`${base}log/${post.id}/`} class="log-card-link">
                     {/* Menu shows just the short name — everything before the spaced dash.
                         The full descriptive title still heads the opened article. */}
-                    {post.data.updated && <p class="log-card-date">{post.data.updated}</p>}
                     <h2 class="log-card-title">{post.data.title.split(/\s+[—–]\s+/)[0]}</h2>
+                    {post.data.updated && <p class="log-card-date">{post.data.updated}</p>}
                     {post.data.stack.length > 0 && (
                       <p class="log-card-tools">{post.data.stack.join(' · ')}</p>
                     )}
@@ -101,9 +80,7 @@ const categories = CATEGORY_ORDER.filter((c) => posts.some((p) => p.data.categor
           <div class="log-stage" aria-hidden="true"></div>
           {posts.map((post) => (
             <article class="log-detail log-panel" data-key={post.id} tabindex="-1">
-              <LogArticle post={post} titleAs="h2">
-                <button slot="eyebrow" type="button" class="log-detail-eyebrow log-panel-close">← All studies</button>
-              </LogArticle>
+              <LogArticle post={post} titleAs="h2" />
             </article>
           ))}
         </div>
@@ -168,20 +145,52 @@ const categories = CATEGORY_ORDER.filter((c) => posts.some((p) => p.data.categor
         });
       };
 
+      // Opening transition: each of the article's blocks drops down from just above and fades
+      // in, staggered top-to-bottom, while the hover image beneath fades out. The body's own
+      // children are cascaded (not the wrapper) so the text itself reveals top-to-bottom.
+      const revealPanel = (panel: HTMLElement) => {
+        const blocks: HTMLElement[] = [];
+        panel.querySelectorAll<HTMLElement>(':scope > *').forEach((el) => {
+          if (el.tagName === 'SCRIPT' || el.tagName === 'STYLE') return;
+          if (el.classList.contains('log-detail-body')) {
+            Array.from(el.children).forEach((c) => blocks.push(c as HTMLElement));
+          } else {
+            blocks.push(el);
+          }
+        });
+        blocks.forEach((b) => b.classList.remove('log-reveal-block'));
+        void panel.offsetWidth; // reflow so the animation replays on every (re-)open
+        blocks.forEach((b, i) => {
+          b.style.setProperty('--reveal-i', String(i));
+          b.classList.add('log-reveal-block');
+        });
+      };
+
+      // Tracks the deselect fade-out timer so a quick re-open can cancel it.
+      let closeTimer = 0;
+
       const openPanel = (key: string) => {
         const panel = panels.get(key);
         if (!panel) return;
+        window.clearTimeout(closeTimer);
+        panel.classList.remove('is-closing');   // in case it was mid fade-out
         if (openKey && panels.has(openKey)) panels.get(openKey)!.classList.remove('is-open');
         panel.classList.add('is-open');
         col.classList.add('has-open');
         col.scrollTop = 0;
+        revealPanel(panel);
         openKey = key;
         setActiveCard(key);
         panel.focus({ preventScroll: true });
       };
 
       const closePanel = () => {
-        if (openKey && panels.has(openKey)) panels.get(openKey)!.classList.remove('is-open');
+        if (openKey && panels.has(openKey)) {
+          const panel = panels.get(openKey)!;
+          panel.classList.add('is-closing');     // fade the study out slowly (CSS), then hide it
+          window.clearTimeout(closeTimer);
+          closeTimer = window.setTimeout(() => panel.classList.remove('is-open', 'is-closing'), 600);
+        }
         col.classList.remove('has-open');
         openKey = null;
         setActiveCard(null);
@@ -212,62 +221,6 @@ const categories = CATEGORY_ORDER.filter((c) => posts.some((p) => p.data.categor
 
       document.querySelectorAll<HTMLButtonElement>('.log-panel-close').forEach((btn) => {
         btn.addEventListener('click', closePanel);
-      });
-    }
-
-    // ---- Filter (category) + sort (date) ------------------------------------------
-    // Independent of the panel logic above and of pointer type, so it works on mobile too.
-    // Each change re-appends the visible cards in view order (so DOM + tab order track what
-    // you see) and re-runs the red light→dark ramp across whatever is currently shown.
-    const list = document.querySelector<HTMLElement>('.log-list');
-    if (list) {
-      const allCards = Array.from(list.querySelectorAll<HTMLElement>('.log-card')); // canonical: newest-first
-      const filterBtns = Array.from(document.querySelectorAll<HTMLButtonElement>('.log-filter'));
-      const sortBtn = document.querySelector<HTMLButtonElement>('.log-sort');
-      const L_TOP = 60, L_BOTTOM = 27; // keep in step with the inline gradient above
-      let filter = 'all';
-      let order: 'newest' | 'oldest' = 'newest';
-
-      const render = () => {
-        // data-category is a '|'-joined facet list, so one study can match several filters.
-        let visible = allCards.filter((c) => filter === 'all' || (c.dataset.category || '').split('|').includes(filter));
-        if (order === 'oldest') visible = visible.slice().reverse();
-        allCards.forEach((c) => { c.hidden = true; c.style.removeProperty('--reveal-i'); });
-        const n = visible.length;
-        visible.forEach((c, i) => {
-          c.hidden = false;
-          list.appendChild(c); // move into view order
-          c.style.setProperty('--reveal-i', String(i)); // stagger step for the reveal
-          const f = n > 1 ? (n - 1 - i) / (n - 1) : 0;
-          c.style.setProperty('--hover-accent', `hsl(0 100% ${Math.round(L_BOTTOM + f * (L_TOP - L_BOTTOM))}%)`);
-        });
-        // Restart the staggered reveal so the boxes fade/rise in one after another.
-        list.classList.remove('is-revealing');
-        void list.offsetWidth; // reflow → the animation re-triggers on every change
-        list.classList.add('is-revealing');
-      };
-
-      filterBtns.forEach((btn) => {
-        btn.addEventListener('click', () => {
-          filter = btn.dataset.filter || 'all';
-          filterBtns.forEach((b) => {
-            const on = b === btn;
-            b.classList.toggle('is-active', on);
-            b.setAttribute('aria-pressed', String(on));
-          });
-          // Close any open detail panel: the new filter may hide its card, which would
-          // otherwise leave the viewer showing a study no longer in the list.
-          document.querySelector<HTMLButtonElement>('.log-panel.is-open .log-panel-close')?.click();
-          render();
-        });
-      });
-
-      sortBtn?.addEventListener('click', () => {
-        order = order === 'newest' ? 'oldest' : 'newest';
-        sortBtn.dataset.order = order;
-        sortBtn.textContent = order === 'newest' ? 'Newest first' : 'Oldest first';
-        sortBtn.setAttribute('aria-label', `Sort studies by date, ${order} first`);
-        render();
       });
     }
   </script>
