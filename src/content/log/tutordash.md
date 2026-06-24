@@ -29,16 +29,10 @@ This project changed the way I worked — as the surface area grew, I leaned int
 
 This is the tutor-facing side of the platform, quickly displaying upcoming lessons, outstanding homework, and monthly income. Starting a lesson opens Google Meet, pulls in lesson notes and prior context, and logs the session to the calendar automatically; you can also schedule a future lesson (which emails the student) or back-fill one you taught off-platform so it still becomes invoiceable.
 
-<div class="log-duo">
-  <figure>
-    <img src="/images/log/tutordash/dashboard-home.png" alt="The tutor dashboard: a 'Good evening, Noah' greeting, the next lesson card with a Begin lesson button, a list of assignments due with completion and correctness bars, and a week calendar." loading="lazy" decoding="async" />
-    <figcaption>Next lesson, assignments due with live completion/accuracy, lessons-this-month and hours-taught counters, and the week at a glance.</figcaption>
-  </figure>
-  <figure>
-    <img src="/images/log/tutordash/dashboard-lesson-modal.png" alt="A 'Lesson with Mencia' modal offering three choices: start lesson now, schedule for later, or log a past lesson." loading="lazy" decoding="async" />
-    <figcaption>One entry point, three paths: start now (opens Meet + notes), schedule for later (emails the student), or log a past lesson so off-platform teaching still bills.</figcaption>
-  </figure>
-</div>
+<figure>
+  <img src="/images/log/tutordash/dashboard-home.png" alt="The tutor dashboard: a 'Good evening, Noah' greeting, the next lesson card with a Begin lesson button, a list of assignments due with completion and correctness bars, and a week calendar." loading="lazy" decoding="async" />
+  <figcaption>Next lesson, assignments due with live completion/accuracy, lessons-this-month and hours-taught counters, and the week at a glance.</figcaption>
+</figure>
 
 ## Everything known about a student
 
@@ -46,7 +40,7 @@ Every student accumulates a record. The detail page has homework completion, ave
 
 <div class="log-duo">
   <figure>
-    <img src="/images/log/tutordash/student-detail.png" alt="A student detail page for 'Mencia' showing test date countdown, an at-a-glance row of metrics (assignments, average score, Math %, R&amp;W %, SAT best/latest, vocab streak and mastered), and collapsible Lessons, Assignments, and SAT tests sections." loading="lazy" decoding="async" />
+    <img src="/images/log/tutordash/student-detail.png" alt="A student detail page showing test date countdown, an at-a-glance row of metrics (assignments, average score, Math %, R&amp;W %, SAT best/latest, vocab streak and mastered), and collapsible Lessons, Assignments, and SAT tests sections." loading="lazy" decoding="async" />
     <figcaption>Assignments, accuracy by subject, SAT best/latest, vocab streak, and days to test, with lessons and score history underneath.</figcaption>
   </figure>
   <figure>
