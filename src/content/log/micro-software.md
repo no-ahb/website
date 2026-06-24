@@ -288,26 +288,26 @@ This is my art portfolio and engineering log. I work primarily with sound, so I'
     display: block;
     padding: 3.3%;
     background: #111214;
-    border-radius: 15% / 6.1%;
+    border-radius: 15% / 6.8%;
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22), inset 0 0 0 1.5px rgba(255, 255, 255, 0.06);
   }
   .iphone img {
     box-sizing: border-box;
     display: block;
     width: 100%;
-    padding: 13.5% 0;
+    padding: 6% 0;
     background: var(--bg, #111214);
-    border-radius: 11.5% / 4.7%;
+    border-radius: 11.5% / 5%;
   }
   .log-detail-body .iphone img, .iphone-lightbox .iphone img { border: none; }
   .iphone::before {
     content: "";
     position: absolute;
-    top: 3.3%;
+    top: 1.7%;
     left: 50%;
     transform: translateX(-50%);
-    width: 22%;
-    aspect-ratio: 5 / 1.35;
+    width: 18%;
+    aspect-ratio: 5 / 1.5;
     background: #000;
     border-radius: 999px;
     z-index: 2;
