@@ -26,11 +26,11 @@ The app walks me through the routine one step at a time, each on its own screen.
 
 <div class="phone-row">
   <figure>
-    <img src="/images/log/violin-practice-app/scales-ready.png" alt="The scales screen: G minor, drone tuned to D, metronome at 60 BPM, slurred bowing." loading="lazy" decoding="async" />
+    <div class="iphone"><img src="/images/log/violin-practice-app/scales-ready.png" alt="The scales screen: G minor, drone tuned to D, metronome at 60 BPM, slurred bowing." loading="lazy" decoding="async" /></div>
     <figcaption>The scales block.</figcaption>
   </figure>
   <figure>
-    <img src="/images/log/violin-practice-app/scales-step.png" alt="Mid-block: broken thirds, two octaves, with a target time counting up." loading="lazy" decoding="async" />
+    <div class="iphone"><img src="/images/log/violin-practice-app/scales-step.png" alt="Mid-block: broken thirds, two octaves, with a target time counting up." loading="lazy" decoding="async" /></div>
     <figcaption>The times are suggestions, not countdowns.</figcaption>
   </figure>
 </div>
@@ -45,27 +45,27 @@ I had a working version in an afternoon and let daily use shape the rest: cuttin
 
 <div class="log-gallery">
   <figure>
-    <img src="/images/log/violin-practice-app/modal.png" alt="The modal block: D phrygian, its mode notes, characteristic tone, implied chord, and a one-line description." loading="lazy" decoding="async" />
+    <div class="iphone"><img src="/images/log/violin-practice-app/modal.png" alt="The modal block: D phrygian, its mode notes, characteristic tone, implied chord, and a one-line description." loading="lazy" decoding="async" /></div>
     <figcaption>The day's mode, its characteristic tone, the chord it implies, and a one-line use.</figcaption>
   </figure>
   <figure>
-    <img src="/images/log/violin-practice-app/chord-scale.png" alt="The chord-scale block: a looping modal vamp with bars-per-chord pacing and the chord tones." loading="lazy" decoding="async" />
+    <div class="iphone"><img src="/images/log/violin-practice-app/chord-scale.png" alt="The chord-scale block: a looping modal vamp with bars-per-chord pacing and the chord tones." loading="lazy" decoding="async" /></div>
     <figcaption>A looping modal vamp to improvise over, with bars-per-chord pacing.</figcaption>
   </figure>
   <figure>
-    <img src="/images/log/violin-practice-app/improv.png" alt="The improv block: a single rotating constraint over a 15-minute timer." loading="lazy" decoding="async" />
+    <div class="iphone"><img src="/images/log/violin-practice-app/improv.png" alt="The improv block: a single rotating constraint over a 15-minute timer." loading="lazy" decoding="async" /></div>
     <figcaption>A rotating compositional constraint to play against.</figcaption>
   </figure>
   <figure>
-    <img src="/images/log/violin-practice-app/recording.png" alt="A practice screen mid-recording, the record button now a red stop with a running timer." loading="lazy" decoding="async" />
+    <div class="iphone"><img src="/images/log/violin-practice-app/recording.png" alt="A practice screen mid-recording, the record button now a red stop with a running timer." loading="lazy" decoding="async" /></div>
     <figcaption>Recording captures to disk.</figcaption>
   </figure>
   <figure>
-    <img src="/images/log/violin-practice-app/wrap-up.png" alt="The session wrap-up: feeling and focus rated one to five, a notes field, and save." loading="lazy" decoding="async" />
+    <div class="iphone"><img src="/images/log/violin-practice-app/wrap-up.png" alt="The session wrap-up: feeling and focus rated one to five, a notes field, and save." loading="lazy" decoding="async" /></div>
     <figcaption>Rate feeling and focus, note what to chase next, then save.</figcaption>
   </figure>
   <figure>
-    <img src="/images/log/violin-practice-app/history.png" alt="The history screen: sessions, a streak, a feeling chart, and a dated list of past sessions." loading="lazy" decoding="async" />
+    <div class="iphone"><img src="/images/log/violin-practice-app/history.png" alt="The history screen: sessions, a streak, a feeling chart, and a dated list of past sessions." loading="lazy" decoding="async" /></div>
     <figcaption>Tracking sessions, streaks, and focus/feel.</figcaption>
   </figure>
 </div>
@@ -267,11 +267,34 @@ This is my art portfolio and engineering log. I work primarily with sound, so I'
     border-radius: 0 0 8px 8px;
   }
 
-  /* Faux phone bezel around the portrait violin screenshots. */
-  .log-detail-body .phone-row figure img,
-  .log-detail-body .log-gallery figure img {
-    border: 6px solid #111;
-    border-radius: 22px;
-    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.16);
+  /* Faux iPhone — violin screens only. Bezel/island sized in % so they scale
+     identically across the 2-up pair and the 3-up gallery. Corner radii use the
+     two-value syntax tuned to the shots' 1:2.17 aspect, so corners stay round. */
+  .log-detail-body .iphone {
+    position: relative;
+    display: block;
+    padding: 3.4%;
+    background: #111214;
+    border-radius: 15% / 6.9%;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22), inset 0 0 0 1.5px rgba(255, 255, 255, 0.06);
+  }
+  .log-detail-body .iphone img {
+    display: block;
+    width: 100%;
+    border: none;
+    border-radius: 11.5% / 5.3%;
+  }
+  .log-detail-body .iphone::before {
+    content: "";
+    position: absolute;
+    top: 3.6%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 22%;
+    aspect-ratio: 5 / 1.4;
+    background: #000;
+    border-radius: 999px;
+    z-index: 2;
+    pointer-events: none;
   }
 </style>
