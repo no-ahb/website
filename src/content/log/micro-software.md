@@ -7,7 +7,7 @@ categories: ["Patches & UI", "Data & ML"]
 sortOrder: 35
 tags: ["software", "web", "python"]
 stack: ["Vanilla JS", "Web Audio", "Python", "SQLite", "React", "Cloudflare Workers", "Astro"]
-thumb: "/images/log/violin-practice-app/scales-ready.png"
+thumb: "/images/log/violin-practice-app/gallery-grid.jpg"
 draft: false
 ---
 
@@ -26,11 +26,11 @@ The app walks me through the routine one step at a time, each on its own screen.
 
 <div class="phone-row">
   <figure>
-    <div class="iphone"><img src="/images/log/violin-practice-app/scales-ready.png" alt="The scales screen: G minor, drone tuned to D, metronome at 60 BPM, slurred bowing." loading="lazy" decoding="async" /></div>
+    <div class="iphone" style="--bg:#2f6b3b"><img src="/images/log/violin-practice-app/scales-ready.png" alt="The scales screen: G minor, drone tuned to D, metronome at 60 BPM, slurred bowing." loading="lazy" decoding="async" /></div>
     <figcaption>The scales block.</figcaption>
   </figure>
   <figure>
-    <div class="iphone"><img src="/images/log/violin-practice-app/scales-step.png" alt="Mid-block: broken thirds, two octaves, with a target time counting up." loading="lazy" decoding="async" /></div>
+    <div class="iphone" style="--bg:#2f6b3b"><img src="/images/log/violin-practice-app/scales-step.png" alt="Mid-block: broken thirds, two octaves, with a target time counting up." loading="lazy" decoding="async" /></div>
     <figcaption>The times are suggestions, not countdowns.</figcaption>
   </figure>
 </div>
@@ -45,27 +45,27 @@ I had a working version in an afternoon and let daily use shape the rest: cuttin
 
 <div class="log-gallery">
   <figure>
-    <div class="iphone"><img src="/images/log/violin-practice-app/modal.png" alt="The modal block: D phrygian, its mode notes, characteristic tone, implied chord, and a one-line description." loading="lazy" decoding="async" /></div>
+    <div class="iphone" style="--bg:#a42453"><img src="/images/log/violin-practice-app/modal.png" alt="The modal block: D phrygian, its mode notes, characteristic tone, implied chord, and a one-line description." loading="lazy" decoding="async" /></div>
     <figcaption>The day's mode, its characteristic tone, the chord it implies, and a one-line use.</figcaption>
   </figure>
   <figure>
-    <div class="iphone"><img src="/images/log/violin-practice-app/chord-scale.png" alt="The chord-scale block: a looping modal vamp with bars-per-chord pacing and the chord tones." loading="lazy" decoding="async" /></div>
+    <div class="iphone" style="--bg:#7a4a1f"><img src="/images/log/violin-practice-app/chord-scale.png" alt="The chord-scale block: a looping modal vamp with bars-per-chord pacing and the chord tones." loading="lazy" decoding="async" /></div>
     <figcaption>A looping modal vamp to improvise over, with bars-per-chord pacing.</figcaption>
   </figure>
   <figure>
-    <div class="iphone"><img src="/images/log/violin-practice-app/improv.png" alt="The improv block: a single rotating constraint over a 15-minute timer." loading="lazy" decoding="async" /></div>
+    <div class="iphone" style="--bg:#c6442b"><img src="/images/log/violin-practice-app/improv.png" alt="The improv block: a single rotating constraint over a 15-minute timer." loading="lazy" decoding="async" /></div>
     <figcaption>A rotating compositional constraint to play against.</figcaption>
   </figure>
   <figure>
-    <div class="iphone"><img src="/images/log/violin-practice-app/recording.png" alt="A practice screen mid-recording, the record button now a red stop with a running timer." loading="lazy" decoding="async" /></div>
+    <div class="iphone" style="--bg:#186a6a"><img src="/images/log/violin-practice-app/recording.png" alt="A practice screen mid-recording, the record button now a red stop with a running timer." loading="lazy" decoding="async" /></div>
     <figcaption>Recording captures to disk.</figcaption>
   </figure>
   <figure>
-    <div class="iphone"><img src="/images/log/violin-practice-app/wrap-up.png" alt="The session wrap-up: feeling and focus rated one to five, a notes field, and save." loading="lazy" decoding="async" /></div>
+    <div class="iphone" style="--bg:#3a6e2f"><img src="/images/log/violin-practice-app/wrap-up.png" alt="The session wrap-up: feeling and focus rated one to five, a notes field, and save." loading="lazy" decoding="async" /></div>
     <figcaption>Rate feeling and focus, note what to chase next, then save.</figcaption>
   </figure>
   <figure>
-    <div class="iphone"><img src="/images/log/violin-practice-app/history.png" alt="The history screen: sessions, a streak, a feeling chart, and a dated list of past sessions." loading="lazy" decoding="async" /></div>
+    <div class="iphone" style="--bg:#7a4a1f"><img src="/images/log/violin-practice-app/history.png" alt="The history screen: sessions, a streak, a feeling chart, and a dated list of past sessions." loading="lazy" decoding="async" /></div>
     <figcaption>Tracking sessions, streaks, and focus/feel.</figcaption>
   </figure>
 </div>
@@ -192,6 +192,17 @@ This is my art portfolio and engineering log. I work primarily with sound, so I'
   </figure>
 </div>
 
+<div class="log-duo">
+  <figure>
+    <img src="/images/log/personal-website/video.jpg" alt="A work page with the custom video player: a play button over the piece's images." loading="lazy" decoding="async" />
+    <figcaption>A custom player for the performance videos.</figcaption>
+  </figure>
+  <figure>
+    <img src="/images/log/personal-website/info.jpg" alt="The info page: a bio, a list of shows and exhibitions, and residencies and grants." loading="lazy" decoding="async" />
+    <figcaption>The info page.</figcaption>
+  </figure>
+</div>
+
 <ul class="log-stack">
   <li>Astro 5</li>
   <li>Content Collections</li>
@@ -267,34 +278,84 @@ This is my art portfolio and engineering log. I work primarily with sound, so I'
     border-radius: 0 0 8px 8px;
   }
 
-  /* Faux iPhone — violin screens only. Bezel/island sized in % so they scale
-     identically across the 2-up pair and the 3-up gallery. Corner radii use the
-     two-value syntax tuned to the shots' 1:2.17 aspect, so corners stay round. */
-  .log-detail-body .iphone {
+  /* Faux iPhone — violin screens only. The screenshot is pushed down into a
+     status-bar band of the screen's own bg colour (--bg) so the Dynamic Island
+     never overlaps the app's top row. %-sized so it scales across the pair and the
+     3-up gallery; radii tuned to the framed ~1:2.30 aspect so corners stay round.
+     Not scoped to .log-detail-body, so the same frame is reused in the lightbox. */
+  .iphone {
     position: relative;
     display: block;
-    padding: 3.4%;
+    padding: 3.3%;
     background: #111214;
-    border-radius: 15% / 6.9%;
+    border-radius: 15% / 6.1%;
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22), inset 0 0 0 1.5px rgba(255, 255, 255, 0.06);
   }
-  .log-detail-body .iphone img {
+  .iphone img {
+    box-sizing: border-box;
     display: block;
     width: 100%;
-    border: none;
-    border-radius: 11.5% / 5.3%;
+    padding: 13.5% 0;
+    background: var(--bg, #111214);
+    border-radius: 11.5% / 4.7%;
   }
-  .log-detail-body .iphone::before {
+  .log-detail-body .iphone img, .iphone-lightbox .iphone img { border: none; }
+  .iphone::before {
     content: "";
     position: absolute;
-    top: 3.6%;
+    top: 3.3%;
     left: 50%;
     transform: translateX(-50%);
     width: 22%;
-    aspect-ratio: 5 / 1.4;
+    aspect-ratio: 5 / 1.35;
     background: #000;
     border-radius: 999px;
     z-index: 2;
     pointer-events: none;
   }
+  /* Click a violin screen → enlarge it inside its iPhone frame. */
+  .iphone-lightbox {
+    position: fixed; inset: 0; z-index: 1000;
+    display: flex; align-items: center; justify-content: center;
+    padding: 4vmin;
+    background: rgba(12, 12, 14, 0.85);
+    cursor: zoom-out;
+    opacity: 0; transition: opacity 0.18s ease;
+  }
+  .iphone-lightbox.is-open { opacity: 1; }
+  .iphone-lightbox .iphone { width: min(33vh, 82vw); box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.55); }
+  @media (prefers-reduced-motion: reduce) { .iphone-lightbox { transition: none; } }
 </style>
+
+<script>
+  // Click a violin screen → open it enlarged in its iPhone frame. Runs in the
+  // capture phase and stops propagation so the article's default (bare-image)
+  // lightbox never fires for these shots.
+  (() => {
+    let overlay = null;
+    const close = () => { if (overlay) { overlay.remove(); overlay = null; document.removeEventListener('keydown', onKey); } };
+    function onKey(e) { if (e.key === 'Escape') close(); }
+    document.addEventListener('click', (e) => {
+      const img = e.target.closest && e.target.closest('.log-detail-body .iphone > img');
+      if (!img) return;
+      e.stopPropagation();
+      e.preventDefault();
+      close();
+      overlay = document.createElement('div');
+      overlay.className = 'iphone-lightbox';
+      const frame = document.createElement('div');
+      frame.className = 'iphone';
+      const inline = img.closest('.iphone').getAttribute('style');
+      if (inline) frame.setAttribute('style', inline);
+      const big = document.createElement('img');
+      big.src = img.currentSrc || img.src;
+      big.alt = img.alt || '';
+      frame.appendChild(big);
+      overlay.appendChild(frame);
+      overlay.addEventListener('click', close);
+      document.body.appendChild(overlay);
+      requestAnimationFrame(() => overlay.classList.add('is-open'));
+      document.addEventListener('keydown', onKey);
+    }, true);
+  })();
+</script>
