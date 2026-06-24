@@ -145,18 +145,18 @@ A website for an art gallery in London that the staff need to keep updated forev
 <summary><span class="entry-more">more</span><span class="entry-less">show less</span><span class="entry-chev" aria-hidden="true">▾</span></summary>
 
 <figure>
-  <img src="/images/log/incubator-site/exhibition-detail.png" alt="An exhibition page: a full-bleed painting, the show title and dates, and a strip of installation-view thumbnails." loading="lazy" decoding="async" />
-  <figcaption>An exhibition page – Charlie Gosling's <em>Good Luck with Me Here</em>, with its installation views.</figcaption>
+  <img src="/images/log/incubator-site/exhibition-jelly-green.jpg" alt="An exhibition page: Jelly Green's Conflagration ii, a fiery abstract painting full-bleed above the show title and a strip of installation views." loading="lazy" decoding="async" />
+  <figcaption>An exhibition page – Jelly Green's <em>Conflagration ii</em>. Every show is one entry in a single JSON file.</figcaption>
 </figure>
 
 <div class="log-duo">
   <figure>
-    <img src="/images/log/incubator-site/exhibitions.png" alt="The exhibitions index: a searchable list of 61 shows with a preview image, filterable by solo/group and date." loading="lazy" decoding="async" />
-    <figcaption>The full index – 61 shows, searchable, filterable by solo or group show and by date.</figcaption>
+    <img src="/images/log/incubator-site/exhibition-yuma-radne.jpg" alt="An exhibition page: Yuma Radne's Playing with Hands, a colorful figurative painting of hands meeting." loading="lazy" decoding="async" />
+    <figcaption>Yuma Radne, <em>Playing with Hands</em>.</figcaption>
   </figure>
   <figure>
-    <img src="/images/log/incubator-site/artist.png" alt="An artist page: the artist's name, an inquire-about-available-works button, and their current show." loading="lazy" decoding="async" />
-    <figcaption>An artist page, with a one-click "inquire about available works".</figcaption>
+    <img src="/images/log/incubator-site/exhibition-harry-grundy.jpg" alt="An exhibition page: Harry Grundy's FULL PELT, a sculptural work in wood and green panels." loading="lazy" decoding="async" />
+    <figcaption>Harry Grundy, <em>FULL PELT</em> – one of 61 shows, each its own page.</figcaption>
   </figure>
 </div>
 
