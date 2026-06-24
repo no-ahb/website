@@ -1,6 +1,6 @@
 ---
 title: "Micro Software"
-subtitle: "Four non-music tools."
+subtitle: "Four non-music projects."
 summary: "A roundup of the non-music software I made this month: a violin practice app I use every day, a StreetEasy tracker for apartment hunting, a gallery website, and the site you're reading this on."
 updated: "June 2026"
 categories: ["Patches & UI", "Data & ML"]
@@ -286,16 +286,16 @@ This is my art portfolio and engineering log. I work primarily with sound, so I'
   .iphone {
     position: relative;
     display: block;
-    padding: 3.3%;
+    padding: 2.5%;
     background: #111214;
-    border-radius: 15% / 6.8%;
+    border-radius: 15% / 6.6%;
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22), inset 0 0 0 1.5px rgba(255, 255, 255, 0.06);
   }
   .iphone img {
     box-sizing: border-box;
     display: block;
     width: 100%;
-    padding: 6% 0;
+    padding: 8% 0;
     background: var(--bg, #111214);
     border-radius: 11.5% / 5%;
   }
@@ -303,10 +303,10 @@ This is my art portfolio and engineering log. I work primarily with sound, so I'
   .iphone::before {
     content: "";
     position: absolute;
-    top: 1.7%;
+    top: 1.4%;
     left: 50%;
     transform: translateX(-50%);
-    width: 18%;
+    width: 25%;
     aspect-ratio: 5 / 1.5;
     background: #000;
     border-radius: 999px;
@@ -325,7 +325,7 @@ This is my art portfolio and engineering log. I work primarily with sound, so I'
   .iphone-lightbox.is-open { opacity: 1; }
   /* In the overlay the bezel can't be a % (that resolves against the full-screen
      container, not the phone) — pin it to the phone's own viewport-based width. */
-  .iphone-lightbox .iphone { width: min(34vh, 82vw); padding: min(1.1vh, 2.7vw); box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.55); }
+  .iphone-lightbox .iphone { width: min(34vh, 82vw); padding: min(0.85vh, 2.05vw); box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.55); }
   @media (prefers-reduced-motion: reduce) { .iphone-lightbox { transition: none; } }
 </style>
 
