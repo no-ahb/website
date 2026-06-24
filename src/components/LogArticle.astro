@@ -26,6 +26,10 @@ const heroImage = post.data.hero || post.data.images[0];
 // Video posters default to the hero, but a study can override it when the hero is
 // a detail shot (e.g. a PCB) while the video documents the finished piece.
 const videoPoster = post.data.videoPoster || heroImage;
+const heroVideo = post.data.heroVideo;
+// Address shown in the faux browser bar: explicit override, else the demo host.
+const hostOf = (url: string) => { try { return new URL(url).host; } catch { return ''; } };
+const frameHost = post.data.frameUrl || (post.data.demo ? hostOf(post.data.demo) : '');
 ---
 
 <header class="log-detail-header">
@@ -40,7 +44,38 @@ const videoPoster = post.data.videoPoster || heroImage;
   )}
 </header>
 
-{heroImage && (
+{post.data.browserFrame && (heroVideo || heroImage) ? (
+  <figure class="log-hero log-hero--browser">
+    <div class="browser">
+      <div class="browser-bar">
+        <span class="browser-dots" aria-hidden="true"></span>
+        {frameHost && <span class="browser-url">{frameHost}</span>}
+      </div>
+      {heroVideo ? (
+        <video
+          class="browser-shot"
+          autoplay
+          muted
+          loop
+          playsinline
+          preload={heroLoading === 'eager' ? 'auto' : 'none'}
+          poster={heroImage ? asset(heroImage) : undefined}
+          aria-label={`${post.data.title} — landing page, scrolling`}
+        >
+          <source src={asset(heroVideo)} type="video/mp4" />
+        </video>
+      ) : (
+        <img
+          class="browser-shot"
+          src={asset(heroImage)}
+          alt={`${post.data.title} — hero`}
+          loading={heroLoading}
+          fetchpriority={heroLoading === 'eager' ? 'high' : undefined}
+        />
+      )}
+    </div>
+  </figure>
+) : heroImage && (
   <figure class:list={["log-hero", post.data.heroFit === 'contain' && "log-hero--contain"]}>
     <img
       src={asset(heroImage)}
@@ -52,7 +87,7 @@ const videoPoster = post.data.videoPoster || heroImage;
   </figure>
 )}
 
-<div class="log-detail-body">
+<div class:list={["log-detail-body", post.data.browserFrame && "log-detail-body--framed", `log-study-${post.id}`]}>
   <Content />
 </div>
 
@@ -188,6 +223,41 @@ const videoPoster = post.data.videoPoster || heroImage;
   });
 </script>
 
+<!-- Hero video: play only while its panel is actually on screen. On the standalone
+     page that's immediately; on the /log index the panels are display:none until
+     opened, so the observer starts playback the moment a panel is shown and pauses it
+     when closed. The gesture retry covers autoplay-blocking extensions. -->
+<script>
+  (() => {
+    const vids = Array.from(document.querySelectorAll<HTMLVideoElement>('video.browser-shot'));
+    if (!vids.length) return;
+    const play = (v: HTMLVideoElement) => {
+      v.muted = true;
+      v.playsInline = true;
+      const r = v.play();
+      if (r) r.catch(() => {});
+    };
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((e) => {
+          const v = e.target as HTMLVideoElement;
+          if (e.isIntersecting) play(v); else v.pause();
+        });
+      }, { threshold: 0.2 });
+      vids.forEach((v) => io.observe(v));
+    } else {
+      vids.forEach(play);
+    }
+    // Retry on the first user gestures in case an extension blocked attribute-autoplay.
+    const kick = () => vids.forEach((v) => {
+      const r = v.getBoundingClientRect();
+      if (v.paused && r.width > 0 && r.bottom > 0 && r.top < window.innerHeight) play(v);
+    });
+    window.addEventListener('pointerdown', kick);
+    window.addEventListener('keydown', kick);
+  })();
+</script>
+
 <!-- Lightbox: click a contact-sheet thumbnail to view it full-size floating over the
      article; click anywhere (or press Escape) to dismiss. -->
 <script>
@@ -203,14 +273,28 @@ const videoPoster = post.data.videoPoster || heroImage;
       setTimeout(() => el.remove(), 200);
     };
     function onKey(e: KeyboardEvent) { if (e.key === 'Escape') remove(); }
-    const open = (src: string, alt: string, caption: string | null) => {
+    const open = (src: string, alt: string, caption: string | null, framed: boolean) => {
       remove();
       overlay = document.createElement('div');
       overlay.className = 'log-lightbox';
       const img = document.createElement('img');
       img.src = src;
       img.alt = alt || '';
-      overlay.appendChild(img);
+      if (framed) {
+        // Enlarge the whole faux browser window — chrome bar and all — not the bare shot.
+        const win = document.createElement('div');
+        win.className = 'lightbox-browser';
+        const bar = document.createElement('div');
+        bar.className = 'lightbox-browser-bar';
+        const dots = document.createElement('span');
+        dots.className = 'browser-dots';
+        bar.appendChild(dots);
+        win.appendChild(bar);
+        win.appendChild(img);
+        overlay.appendChild(win);
+      } else {
+        overlay.appendChild(img);
+      }
       if (caption) {
         const c = document.createElement('p');
         c.className = 'log-lightbox-cap';
@@ -226,7 +310,13 @@ const videoPoster = post.data.videoPoster || heroImage;
       img.addEventListener('click', () => {
         const fig = img.closest('figure');
         const cap = fig && fig.querySelector('figcaption');
-        open(img.currentSrc || img.src, img.alt, cap && cap.textContent ? cap.textContent.trim() : null);
+        // Detect framing structurally (works for both this study's `--framed` bodies and
+        // Micro Software's `.winshot`/`.log-duo` figures): a framed figure carries the
+        // 30px top padding that holds the chrome bar.
+        const figEl = img.closest('figure');
+        const framed = !!img.closest('.log-hero--browser')
+          || (!!figEl && getComputedStyle(figEl).paddingTop === '30px');
+        open(img.currentSrc || img.src, img.alt, cap && cap.textContent ? cap.textContent.trim() : null, framed);
       });
     });
   })();

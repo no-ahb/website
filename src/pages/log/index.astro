@@ -4,25 +4,58 @@ import LogArticle from '../../components/LogArticle.astro';
 import { getCollection } from 'astro:content';
 import { asset } from '../../lib/asset';
 
-// Reverse-chronological by `updated` (most recently updated first); ties fall back to
-// sortOrder so same-month studies keep a stable order. `updated` is free-text like
-// "May 2026" / "2024", which Date.parse handles; anything unparseable sorts last.
+// Menu order is curated: Violin Practice, SuperCollider, ANTIPHON, Suspension, North Sea. Anything
+// not listed falls back to reverse-chronological by `updated` (free-text like "May 2026", parsed by
+// Date.parse; unparseable sorts last), ties broken by sortOrder.
+const MENU_ORDER = ['violin-practice-app', 'violin-electronics-solo', 'antiphon', 'suspension', 'north-sea'];
+const menuRank = (id: string) => {
+  const i = MENU_ORDER.indexOf(id);
+  return i === -1 ? Infinity : i;
+};
 const updatedTime = (u?: string) => {
   const t = u ? Date.parse(u) : NaN;
   return Number.isNaN(t) ? -Infinity : t;
 };
 const posts = (await getCollection('log', ({ data }) => !data.draft))
   .sort((a, b) =>
+    (menuRank(a.id) - menuRank(b.id)) ||
     (updatedTime(b.data.updated) - updatedTime(a.data.updated)) ||
     ((b.data.sortOrder ?? 0) - (a.data.sortOrder ?? 0))
   );
 const base = import.meta.env.BASE_URL;
+
+// Pen-draw intro. Each box is its own module: one pen traces its four sides as a continuous square —
+// top L→R, right T→B, bottom R→L, left B→T — and the box's text fades in the moment that square
+// closes. Each box (the LOG label + every study) carries a stable data-box index and a build-time
+// --start (its slot's start time). The inline script below shuffles which start time each box gets on
+// every load, so the pen draws the boxes in a different sequence each visit; the set of start times is
+// fixed, so the total runtime never changes. The starts are evenly spaced and a box's start lands
+// before the previous one has closed, so the boxes dovetail. Per-side timing lives in main.css; here
+// we only emit each box's --start, each side's --side (0–3), and each box's pen-tip colour (--tip).
+const COLS = 2;
+const rows = Math.max(1, Math.ceil(posts.length / COLS));
+// Suspension sits just right of the LOG box and anchors the start row; fall back to the middle row.
+const suspensionIndex = posts.findIndex((p) => p.id === 'suspension');
+const startRow = suspensionIndex >= 0 ? Math.floor(suspensionIndex / COLS) : Math.floor((rows - 1) / 2);
+
+// Box-start schedule. Boxes have orders 0…maxOrder (LOG is one box, then each study). Starts are
+// evenly spaced by BOX_GAP — shorter than a box's outline time (3 * --side-gap + --draw-dur in
+// main.css), so each box begins before the previous closes and they dovetail. schedule[order] = that
+// order's start time; the shuffle picks which order (hence which start) each box gets, but the
+// schedule itself is fixed, so the runtime is constant whatever order the shuffle deals.
+const maxOrder = posts.length;
+const BOX_GAP = 0.25;
+const schedule = Array.from({ length: maxOrder + 1 }, (_, k) => +(k * BOX_GAP).toFixed(3));
 
 // Hover fill is one colour family now — the works red — rendered as a gradient DOWN the
 // menu: lightest at the top row, the original #8B0000 (hsl(0 100% 27%)) at the bottom.
 // Each box stays a solid shade; only the lightness steps with row position.
 const HOVER_L_BOTTOM = 27; // matches --color-accent-works (#8B0000)
 const HOVER_L_TOP = 60;    // lightest red, on the top row
+// A box's hover red doubles as its pen-tip colour: the line is drawn with a red tip that dries to
+// black just behind it ("the red of the box it'll hover onto"). Same lightness ramp as the hover fill.
+const hoverLight = (i: number) =>
+  Math.round(HOVER_L_BOTTOM + (posts.length > 1 ? (posts.length - 1 - i) / (posts.length - 1) : 0) * (HOVER_L_TOP - HOVER_L_BOTTOM));
 ---
 
 <Base
@@ -33,62 +66,126 @@ const HOVER_L_TOP = 60;    // lightest red, on the top row
 >
   <div class="log-page">
     {posts.length > 0 ? (
-      <div class="log-layout">
-        {/* LEFT — the menu of studies. Each row keeps a real href so it works on
-            mobile and without JS; on desktop the click is intercepted to open the
-            study in the right pane instead of navigating. */}
-        <div class="log-main">
-          <div class="log-main-inner">
-          <ul class="log-list">
-            <li class="log-title-box">
-              <h1 class="log-header-title">Log</h1>
-              <p class="log-standfirst">Build notes and case-studies.</p>
-            </li>
-            {posts.map((post, i) => {
-              const preview = post.data.thumb || post.data.hero || post.data.images[0];
-              // f: 0 at the bottom row, 1 at the top — drives the lightness ramp so the
-              // bottom keeps the original red and each row above is a step lighter.
-              const f = posts.length > 1 ? (posts.length - 1 - i) / (posts.length - 1) : 0;
-              const hoverL = Math.round(HOVER_L_BOTTOM + f * (HOVER_L_TOP - HOVER_L_BOTTOM));
-              return (
-                <li
-                  class="log-card"
-                  style={`--hover-accent: hsl(0 100% ${hoverL}%)`}
-                  data-preview={preview ? asset(preview) : ''}
-                  data-key={post.id}
-                  data-rotate={String(post.data.thumbRotate ?? 0)}
-                >
-                  <a href={`${base}log/${post.id}/`} class="log-card-link">
-                    {/* Menu shows just the short name — everything before the spaced dash.
-                        The full descriptive title still heads the opened article. */}
-                    <h2 class="log-card-title">{post.data.title.split(/\s+[—–]\s+/)[0]}</h2>
-                    {post.data.updated && <p class="log-card-date">{post.data.updated}</p>}
-                    {post.data.stack.length > 0 && (
-                      <p class="log-card-tools">{post.data.stack.join(' · ')}</p>
-                    )}
-                  </a>
-                </li>
-              );
-            })}
-          </ul>
+      <>
+        {/* LOG label — lifted out of the grid. On desktop it's fixed in the left nav strip, under
+            "Noah Berrie / Info / Scoring / Works" and left of the studies; on mobile a plain block
+            above them. A pen traces its outline first, then the text fades in. */}
+        <div class="log-aside" data-box="0" style={`--aside-row: ${startRow}; --start: ${schedule[0]}s`}>
+          {/* Pen-draw overlay: one continuous square — top L→R, right T→B, bottom R→L, left B→T.
+              Bottom/right sit at 100% so they line up with the grid's adjacent boxes. --start
+              cascades from .log-aside (reshuffled per load); each side carries its own --side (0–3).
+              The pen-tip colour (--tip) falls back to the default red set in main.css for the LOG box. */}
+          <div class="log-draw log-draw-aside" aria-hidden="true">
+            <span class="ld-h ld-t" style="top: 0; left: 0; width: 100%; --side: 0"></span>
+            <span class="ld-v ld-r" style="top: 0; left: 100%; height: 100%; --side: 1"></span>
+            <span class="ld-h ld-b" style="top: 100%; left: 0; width: 100%; --side: 2"></span>
+            <span class="ld-v ld-l" style="top: 0; left: 0; height: 100%; --side: 3"></span>
+          </div>
+          <div class="log-title-box">
+            <h1 class="log-header-title">Log</h1>
+            <p class="log-standfirst">Build notes and case-studies.</p>
           </div>
         </div>
 
-        {/* RIGHT — the viewer. The hover stage shows a study's image; clicking a study
-            reveals its full article here (pre-rendered, scrolls independently of the menu). */}
-        <div class="log-detail-col">
-          <div class="log-stage" aria-hidden="true"></div>
-          {posts.map((post) => (
-            <article class="log-detail log-panel" data-key={post.id} tabindex="-1">
-              <LogArticle post={post} titleAs="h2" />
-            </article>
-          ))}
+        <div class="log-layout">
+          {/* LEFT — the menu of studies. Each row keeps a real href so it works on
+              mobile and without JS; on desktop the click is intercepted to open the
+              study in the right pane instead of navigating. */}
+          <div class="log-main">
+            <div class="log-main-inner">
+            <ul class="log-list">
+              {posts.map((post, i) => {
+                const preview = post.data.thumb || post.data.hero || post.data.images[0];
+                // f: 0 at the bottom row, 1 at the top — drives the lightness ramp so the
+                // bottom keeps the original red and each row above is a step lighter.
+                const hoverL = hoverLight(i);
+                return (
+                  <li
+                    class="log-card"
+                    style={`--hover-accent: hsl(0 100% ${hoverL}%); --start: ${schedule[i + 1]}s`}
+                    data-box={i + 1}
+                    data-preview={preview ? asset(preview) : ''}
+                    data-key={post.id}
+                    data-rotate={String(post.data.thumbRotate ?? 0)}
+                  >
+                    <a href={`${base}log/${post.id}/`} class="log-card-link">
+                      {/* Menu shows just the short name — everything before the spaced dash.
+                          The full descriptive title still heads the opened article. */}
+                      <h2 class="log-card-title">{post.data.title.split(/\s+[—–]\s+/)[0]}</h2>
+                      {post.data.updated && <p class="log-card-date">{post.data.updated}</p>}
+                      {post.data.stack.length > 0 && (
+                        <p class="log-card-tools">{post.data.stack.join(' · ')}</p>
+                      )}
+                    </a>
+                  </li>
+                );
+              })}
+            </ul>
+            {/* Pen-draw overlay: one continuous square per study box (top L→R, right T→B, bottom
+                R→L, left B→T), the boxes traced in a per-load shuffled order. Each side is a cell-sized
+                segment at the box's edge; shared edges land on the same pixel (so they read as one 1px
+                line), and the last column/row sit 1px inside so they aren't clipped. The overlay sits
+                above the cards so no line is hidden by a card bg. --tip is the box's row red — the pen
+                draws with that tip and it dries to black just behind the leading edge. */}
+            <div class="log-draw log-draw-grid" aria-hidden="true">
+              {posts.map((post, i) => {
+                const r = Math.floor(i / COLS), c = i % COLS;
+                const o = i + 1;                                 // box index (LOG is 0); --start is shuffled per load
+                const tip = `hsl(0 100% ${hoverLight(i)}%)`;     // pen-tip red for this box's row
+                const x = `calc(${c} * var(--sqw))`;
+                const y = `calc(${r} * var(--sqh))`;
+                const right = c + 1 === COLS ? `calc(${c + 1} * var(--sqw) - 1px)` : `calc(${c + 1} * var(--sqw))`;
+                const bottom = r + 1 === rows ? `calc(${r + 1} * var(--sqh) - 1px)` : `calc(${r + 1} * var(--sqh))`;
+                return (
+                  <>
+                    <span class="ld-h ld-t" data-box={o} style={`top: ${y}; left: ${x}; width: var(--sqw); --start: ${schedule[o]}s; --side: 0; --tip: ${tip}`}></span>
+                    <span class="ld-v ld-r" data-box={o} style={`top: ${y}; left: ${right}; height: var(--sqh); --start: ${schedule[o]}s; --side: 1; --tip: ${tip}`}></span>
+                    <span class="ld-h ld-b" data-box={o} style={`top: ${bottom}; left: ${x}; width: var(--sqw); --start: ${schedule[o]}s; --side: 2; --tip: ${tip}`}></span>
+                    <span class="ld-v ld-l" data-box={o} style={`top: ${y}; left: ${x}; height: var(--sqh); --start: ${schedule[o]}s; --side: 3; --tip: ${tip}`}></span>
+                  </>
+                );
+              })}
+            </div>
+            </div>
+          </div>
+
+          {/* RIGHT — the viewer. The hover stage shows a study's image; clicking a study
+              reveals its full article here (pre-rendered, scrolls independently of the menu). */}
+          <div class="log-detail-col">
+            <div class="log-stage" aria-hidden="true"></div>
+            {posts.map((post) => (
+              <article class="log-detail log-panel" data-key={post.id} tabindex="-1">
+                <LogArticle post={post} titleAs="h2" />
+              </article>
+            ))}
+          </div>
         </div>
-      </div>
+      </>
     ) : (
       <p class="placeholder">No entries yet.</p>
     )}
   </div>
+
+  <script define:vars={{ schedule }}>
+    // Shuffle the pen-draw order on every load. Each box (the LOG label + every study) is tagged
+    // data-box="0…N" and carries a build-time --start (reading-order slot, the no-JS fallback). Here
+    // we deal out the same fixed set of start times (`schedule`, eased in index.astro) in a random
+    // order, so the boxes draw in a different sequence each visit while the runtime stays identical.
+    // Runs before first paint (define:vars renders this inline) so it lands before the boxes draw.
+    (function () {
+      var els = document.querySelectorAll('[data-box]');
+      if (!els.length) return;
+      var n = schedule.length;
+      var perm = Array.from({ length: n }, function (_, i) { return i; });
+      for (var i = n - 1; i > 0; i--) {                       // Fisher–Yates
+        var j = Math.floor(Math.random() * (i + 1));
+        var t = perm[i]; perm[i] = perm[j]; perm[j] = t;
+      }
+      els.forEach(function (el) {
+        el.style.setProperty('--start', schedule[perm[+el.dataset.box]] + 's');
+      });
+    })();
+  </script>
 
   <script>
     // Two-pane master–detail. Desktop only (pointer + width); on touch / narrow screens
@@ -145,40 +242,21 @@ const HOVER_L_TOP = 60;    // lightest red, on the top row
         });
       };
 
-      // Opening transition: each of the article's blocks drops down from just above and fades
-      // in, staggered top-to-bottom, while the hover image beneath fades out. The body's own
-      // children are cascaded (not the wrapper) so the text itself reveals top-to-bottom.
-      const revealPanel = (panel: HTMLElement) => {
-        const blocks: HTMLElement[] = [];
-        panel.querySelectorAll<HTMLElement>(':scope > *').forEach((el) => {
-          if (el.tagName === 'SCRIPT' || el.tagName === 'STYLE') return;
-          if (el.classList.contains('log-detail-body')) {
-            Array.from(el.children).forEach((c) => blocks.push(c as HTMLElement));
-          } else {
-            blocks.push(el);
-          }
-        });
-        blocks.forEach((b) => b.classList.remove('log-reveal-block'));
-        void panel.offsetWidth; // reflow so the animation replays on every (re-)open
-        blocks.forEach((b, i) => {
-          b.style.setProperty('--reveal-i', String(i));
-          b.classList.add('log-reveal-block');
-        });
-      };
-
       // Tracks the deselect fade-out timer so a quick re-open can cancel it.
       let closeTimer = 0;
 
+      // Open: add .is-open (display:block, still opacity 0), force a reflow, then add .is-shown so
+      // the panel fades up — the exact reverse of the close, so opening and closing look identical.
       const openPanel = (key: string) => {
         const panel = panels.get(key);
         if (!panel) return;
         window.clearTimeout(closeTimer);
-        panel.classList.remove('is-closing');   // in case it was mid fade-out
-        if (openKey && panels.has(openKey)) panels.get(openKey)!.classList.remove('is-open');
+        if (openKey && panels.has(openKey)) panels.get(openKey)!.classList.remove('is-open', 'is-shown');
         panel.classList.add('is-open');
         col.classList.add('has-open');
         col.scrollTop = 0;
-        revealPanel(panel);
+        void panel.offsetWidth;                  // reflow so the opacity transition runs from 0
+        panel.classList.add('is-shown');         // fade in to opacity 1
         openKey = key;
         setActiveCard(key);
         panel.focus({ preventScroll: true });
@@ -187,9 +265,9 @@ const HOVER_L_TOP = 60;    // lightest red, on the top row
       const closePanel = () => {
         if (openKey && panels.has(openKey)) {
           const panel = panels.get(openKey)!;
-          panel.classList.add('is-closing');     // fade the study out slowly (CSS), then hide it
+          panel.classList.remove('is-shown');    // fade the study out (opacity), then hide it
           window.clearTimeout(closeTimer);
-          closeTimer = window.setTimeout(() => panel.classList.remove('is-open', 'is-closing'), 600);
+          closeTimer = window.setTimeout(() => panel.classList.remove('is-open'), 600);
         }
         col.classList.remove('has-open');
         openKey = null;
