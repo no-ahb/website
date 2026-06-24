@@ -64,6 +64,9 @@ const log = defineCollection({
     hero: z.string().optional(),
     heroPosition: z.string().optional(),
     heroFit: z.enum(['cover', 'contain']).optional(), // 'contain' shows the whole image (e.g. a UI screenshot) instead of cover-cropping it to a banner
+    heroVideo: z.string().optional(),          // local autoplaying mp4 hero (muted + looped); poster falls back to `hero`
+    browserFrame: z.boolean().default(false),  // wrap the hero + every body screenshot in a faux browser window
+    frameUrl: z.string().optional(),           // address shown in the faux browser bar (defaults to the demo host)
 
     thumb: z.string().optional(),              // index hover-preview image (defaults to hero / first image)
     thumbRotate: z.number().default(0),        // degrees to rotate the hover-preview image (orientation fix)

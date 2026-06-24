@@ -1,6 +1,6 @@
 ---
 title: "North Sea"
-subtitle: "I built a buoy to record the movement of the sea and then built the electronics for the stepper motors that replay it"
+subtitle: "A buoy to record the movement of the sea; stepper motors to replay it"
 summary: "A self-contained buoy logs ocean motion at 50 Hz for 25 hours; an offline pipeline reconstructs surge, sway and heave; and three belt-driven carriages replay that motion across a field of tuned strings."
 updated: "March 2026"
 categories: ["Hardware & PCBs", "Data & ML"]
@@ -24,7 +24,7 @@ North Sea started off as a very simple idea. I wanted to translate the motion of
 
 ## The buoy
 
-So the first step was recording motion. I used a [Raspberry Pi Pico 2](https://www.raspberrypi.com/products/raspberry-pi-pico-2/) with a [BNO085](https://www.adafruit.com/product/4754) IMU recording at 50 Hz, writing the linear acceleration and the orientation quaternion to disk. Samples are written as a fixed 32-byte binary layout (`<Ifffffff`: a millisecond timestamp plus seven float32s), buffered into 32 KiB blocks, behind a 42-byte header that's rewritten on close with the final sample count and an accumulated CRC32.
+First I had to record motion. I used a [Raspberry Pi Pico 2](https://www.raspberrypi.com/products/raspberry-pi-pico-2/) with a [BNO085](https://www.adafruit.com/product/4754) IMU recording at 50 Hz, writing the linear acceleration and the orientation quaternion to disk. Samples are written as a fixed 32-byte binary layout (`<Ifffffff`: a millisecond timestamp plus seven float32s), buffered into 32 KiB blocks, behind a 42-byte header that's rewritten on close with the final sample count and an accumulated CRC32.
 
 <div class="log-duo">
   <figure>
@@ -33,7 +33,7 @@ So the first step was recording motion. I used a [Raspberry Pi Pico 2](https://w
   </figure>
   <figure>
     <img src="/images/log/north-sea/buoy-construction.jpg" alt="The sealed sensor capsule ringed with grey foam tubes with a mooring line." loading="lazy" decoding="async" />
-    <figcaption>Under construction — the capsule ringed with foam pipe-insulation for flotation plus a mooring line.</figcaption>
+    <figcaption>The capsule ringed with foam pipe-insulation for flotation plus a mooring line.</figcaption>
   </figure>
 </div>
 
@@ -60,12 +60,7 @@ The output is three channels — surge, sway, heave — at 10 Hz. One run logged
 
 <figure>
   <img src="/images/log/north-sea/reconstruction.png" alt="Three stacked plots of surge, sway and heave displacement in metres over 25 hours." loading="lazy" decoding="async" />
-  <figcaption>The same 25 hours after reconstruction: surge, sway and heave displacement at 10 Hz — metres of real sea motion, the last physical signal before it's scaled for the carriages.</figcaption>
-</figure>
-
-<figure>
-  <img src="/images/log/north-sea/motor-feed.png" alt="Heave, sway, and surge cropped to the in-water window, normalized together to 0–1, with a ten-second fade in and out." loading="lazy" decoding="async" />
-  <figcaption>Heave, sway, and surge cropped to the in-water window, normalized together to 0–1, with a ten-second fade in and out.</figcaption>
+  <figcaption>The same 25 hours after reconstruction: surge, sway and heave displacement at 10 Hz.</figcaption>
 </figure>
 
 ## Replaying it through the strings
@@ -90,7 +85,7 @@ A second Pico 2 streams that 10 Hz motion to three carriages over a custom board
 
 <figure>
   <img src="/images/log/north-sea/parametric-layout.png" alt="A browser tool laying out three plates of vertical strings with tuning pins and hitch pins, a panel of layout parameters on the left, a header reading 516 strings across three columns." loading="lazy" decoding="async" />
-  <figcaption>The parametric layout tool I wrote — it positions all 516 strings (172 × 3 panels) and their tuning and hitch pins from a handful of parameters, and emits the laser-cut file directly.</figcaption>
+  <figcaption>The parametric layout tool I wrote to position all 516 strings (172 × 3 panels) and their tuning and hitch pins from a handful of parameters. It produces a file for the laser-cutter directly.</figcaption>
 </figure>
 
 <div class="log-duo">

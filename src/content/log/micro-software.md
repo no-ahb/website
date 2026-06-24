@@ -13,7 +13,9 @@ draft: false
 
 In the last month or two I've written a lot of software that has nothing to do with music. These are four micro tools I've built for various parts of my life. Quick notes on each.
 
-## Violin Practice
+---
+
+## Violin Practice App
 
 I try to practice violin for 45 minutes a day, more so when a performance is coming up. My practice used to be fairly fluid but lately I've been trying to be more disciplined about it: scales, modal work, some Bach, and structured improvisation. I wanted to both structure the sessions and track them so I'd stay focused over months. So I wrote a small app for it. A year ago this would have been overkill; now it takes less than two hours to get something working, replacing the tuner, metronome, and note-taking apps I'd used for years.
 
@@ -137,7 +139,7 @@ A pipeline board moves a place from saved to texted to toured to offer; a "teach
 
 ---
 
-## Incubator
+## Incubator Website
 
 A lightweight website for an art gallery in London that the staff can update without touching code or git repos. Staff edit shows through a password-gated form; a small Cloudflare Worker checks the password and commits the changes straight to the repo, which redeploys the site.
 
@@ -227,8 +229,8 @@ This is my art portfolio and engineering log. I work primarily with sound, so I'
     font-size: 0.7rem;
     letter-spacing: 0.02em;
     text-transform: lowercase;
-    color: #000;
-    border: 1px solid rgba(0, 0, 0, 0.28);
+    color: var(--color-accent-info);
+    border: 1px solid var(--color-accent-info);
     border-radius: 999px;
     padding: 0.22rem 0.62rem;
     line-height: 1;
@@ -236,7 +238,7 @@ This is my art portfolio and engineering log. I work primarily with sound, so I'
   }
   .log-detail-body details.entry > summary::-webkit-details-marker { display: none; }
   .log-detail-body details.entry > summary::marker { content: ""; }
-  .log-detail-body details.entry > summary:hover { background: var(--color-surface); border-color: #000; }
+  .log-detail-body details.entry > summary:hover { background: rgba(0, 47, 167, 0.07); border-color: var(--color-accent-info); }
   .log-detail-body details.entry[open] > summary { margin-bottom: 1.4rem; }
   .log-detail-body details.entry .entry-less { display: none; }
   .log-detail-body details.entry[open] .entry-more { display: none; }
@@ -245,7 +247,9 @@ This is my art portfolio and engineering log. I work primarily with sound, so I'
   .log-detail-body details.entry[open] .entry-chev { transform: rotate(180deg); }
   .log-detail-body hr {
     border: 0;
-    border-top: 1px solid var(--color-rule);
+    height: 1px;
+    background: var(--color-rule);
+    transform: scaleY(0.5);                /* match the header rule: a true half-pixel hairline */
     margin: 2.75rem 0;
   }
   .log-panel .log-detail-body hr { margin-left: -2.5rem; }
