@@ -323,7 +323,9 @@ This is my art portfolio and engineering log. I work primarily with sound, so I'
     opacity: 0; transition: opacity 0.18s ease;
   }
   .iphone-lightbox.is-open { opacity: 1; }
-  .iphone-lightbox .iphone { width: min(33vh, 82vw); box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.55); }
+  /* In the overlay the bezel can't be a % (that resolves against the full-screen
+     container, not the phone) — pin it to the phone's own viewport-based width. */
+  .iphone-lightbox .iphone { width: min(34vh, 82vw); padding: min(1.1vh, 2.7vw); box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.55); }
   @media (prefers-reduced-motion: reduce) { .iphone-lightbox { transition: none; } }
 </style>
 
