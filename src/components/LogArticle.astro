@@ -36,6 +36,11 @@ const frameHost = post.data.frameUrl || (post.data.demo ? hostOf(post.data.demo)
   <slot name="eyebrow" />
   <TitleTag class="log-detail-title">{post.data.title}</TitleTag>
   {post.data.subtitle && <p class="log-detail-subtitle">{post.data.subtitle}</p>}
+  {post.data.demo && (
+    <p class="log-detail-demo">
+      <a href={post.data.demo} target="_blank" rel="noopener noreferrer" data-umami-event="log-demo-top">{hostOf(post.data.demo)} ↗</a>
+    </p>
+  )}
   {post.data.updated && <p class="log-detail-updated">{post.data.updated}</p>}
   {post.data.tags.length > 0 && (
     <ul class="log-detail-tags">
