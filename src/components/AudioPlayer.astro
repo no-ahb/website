@@ -121,6 +121,8 @@ try {
 </style>
 
 <script>
+  import { trackMediaWatch } from '../scripts/track-media';
+
   document.querySelectorAll<HTMLElement>('.audio-player').forEach((player) => {
     const src = player.dataset.src;
     if (!src) return;
@@ -129,6 +131,10 @@ try {
     const track = player.querySelector('.audio-player-track') as HTMLElement;
     const filled = player.querySelector('.audio-player-filled') as HTMLElement;
     const timeEl = player.querySelector('.audio-player-time') as HTMLElement;
+
+    const title = player.dataset.title || '';
+    const work = player.dataset.work || title;
+    const clip = player.dataset.clip || undefined;
 
     let audio: HTMLAudioElement | null = null;
     let raf: number | null = null;
@@ -155,55 +161,24 @@ try {
         audio.addEventListener('loadedmetadata', () => {
           timeEl.textContent = `0:00 / ${fmt(audio!.duration)}`;
         });
-        audio.addEventListener('pause', markStop);
         audio.addEventListener('ended', () => {
           player.classList.remove('playing');
           filled.style.width = '0%';
           audio!.currentTime = 0;
           timeEl.textContent = `0:00 / ${fmt(audio!.duration)}`;
-          fireDuration('ended');
         });
+        // Listen-time analytics, shared with the video players (audio-play on first
+        // play, audio-end once past 3s on ended/leave).
+        trackMediaWatch(audio, 'audio-end', { work, clip, title }, 'audio-play');
       }
       return audio;
     }
-
-    const title = player.dataset.title || '';
-    const work = player.dataset.work || title;
-    const clip = player.dataset.clip || undefined;
-    let trackedPlay = false;
-    let playStartedAt = 0;
-    let totalMs = 0;
-    let durationFired = false;
-
-    function markPlay() { if (playStartedAt === 0) playStartedAt = Date.now(); }
-    function markStop() {
-      if (playStartedAt !== 0) {
-        totalMs += Date.now() - playStartedAt;
-        playStartedAt = 0;
-      }
-    }
-    function fireDuration(reason: string) {
-      if (durationFired) return;
-      markStop();
-      if (totalMs < 3000) return;
-      durationFired = true;
-      const dur = audio?.duration || 0;
-      const seconds = Math.round(totalMs / 1000);
-      const pct = dur ? Math.min(100, Math.round((totalMs / 1000 / dur) * 100)) : 0;
-      (window as any).umami?.track?.('audio-end', { work, clip, title, seconds, pct, reason });
-    }
-    window.addEventListener('pagehide', () => fireDuration('leave'));
 
     playBtn.addEventListener('click', () => {
       const a = ensureAudio();
       if (a.paused) {
         a.play().then(() => {
           player.classList.add('playing');
-          if (!trackedPlay) {
-            trackedPlay = true;
-            (window as any).umami?.track?.('audio-play', { work, clip, title });
-          }
-          markPlay();
           tick();
         }).catch(() => {});
       } else {

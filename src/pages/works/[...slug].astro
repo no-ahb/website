@@ -76,17 +76,6 @@ const jsonLd = {
             </div>
           </div>
         </div>
-      ) : work.data.thumbnail && !work.data.video && work.data.images.length > 0 ? (
-        <div class="work-scroll-wrap" data-image-count="1">
-          <div class="work-scroll-gallery">
-            <div class="work-scroll-track">
-              <img
-                src={asset(work.data.thumbnail)}
-                alt={`${work.data.title} by Noah Berrie — ${work.data.medium}`}
-              />
-            </div>
-          </div>
-        </div>
       ) : !work.data.video && !work.data.bandcamp ? (
         <div class="placeholder" style="margin-top: 2rem;">
           Documentation images to be added
@@ -153,59 +142,9 @@ const jsonLd = {
           </div>
         )}
 
-        <script is:inline define:vars={{ workTitle: work.data.title }}>
-          function trackVideoWatch(video, work, src) {
-            let startedAt = 0;
-            let totalMs = 0;
-            let fired = false;
-            function markPlay() { if (startedAt === 0) startedAt = Date.now(); }
-            function markStop() {
-              if (startedAt !== 0) {
-                totalMs += Date.now() - startedAt;
-                startedAt = 0;
-              }
-            }
-            function fire(reason) {
-              if (fired) return;
-              markStop();
-              if (totalMs < 3000) return;
-              fired = true;
-              const dur = video.duration || 0;
-              const seconds = Math.round(totalMs / 1000);
-              const pct = dur ? Math.min(100, Math.round((totalMs / 1000 / dur) * 100)) : 0;
-              window.umami?.track?.('video-end', { work, src, seconds, pct, reason });
-            }
-            video.addEventListener('play', markPlay);
-            video.addEventListener('pause', markStop);
-            video.addEventListener('ended', () => fire('ended'));
-            window.addEventListener('pagehide', () => fire('leave'), { once: true });
-          }
-
-          document.querySelectorAll('.video-facade').forEach((btn) => {
-            btn.addEventListener('click', () => {
-              const local = btn.getAttribute('data-local-src');
-              const yt = btn.getAttribute('data-yt-src');
-              if (local) {
-                const v = document.createElement('video');
-                v.src = local;
-                v.controls = true;
-                v.autoplay = true;
-                v.playsInline = true;
-                v.preload = 'metadata';
-                v.title = btn.getAttribute('aria-label') || '';
-                btn.replaceWith(v);
-                v.play?.().catch(() => {});
-                trackVideoWatch(v, workTitle, local);
-              } else if (yt) {
-                const iframe = document.createElement('iframe');
-                iframe.src = yt;
-                iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture; gyroscope; accelerometer');
-                iframe.setAttribute('allowfullscreen', '');
-                iframe.title = btn.getAttribute('aria-label') || '';
-                btn.replaceWith(iframe);
-              }
-            });
-          });
+        <script>
+          import { initVideoFacades } from '../../scripts/track-media';
+          initVideoFacades();
         </script>
 
         {work.data.bandcamp && (

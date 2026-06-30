@@ -21,7 +21,7 @@ const altText = `${title} by Noah Berrie — ${medium}, ${year}`;
 <a href={`${base}works/${slug}/`} class="work-card reveal" data-has-video={videoPreview ? 'true' : undefined}>
   <div class="work-card-media">
     {thumbnail ? (
-      <img src={thumbnail ? asset(thumbnail) : undefined} alt={altText} loading="lazy" style={thumbnailPosition ? `object-position: ${thumbnailPosition}` : undefined} />
+      <img src={asset(thumbnail)} alt={altText} loading="lazy" style={thumbnailPosition ? `object-position: ${thumbnailPosition}` : undefined} />
     ) : (
       <div class="placeholder" role="img" aria-label={altText}>
         {title}
@@ -29,7 +29,7 @@ const altText = `${title} by Noah Berrie — ${medium}, ${year}`;
     )}
     {videoPreview && (
       <video
-        src={videoPreview}
+        src={asset(videoPreview)}
         muted
         playsinline
         preload="none"
