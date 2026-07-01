@@ -3,7 +3,6 @@ title: "ANTIPHON"
 subtitle: "Composition via multidimensional timbral traversal"
 summary: "300,000 timbral windows from a string quintet and an orchestra of objects, mapped with UMAP and composed into a 14-channel piece by a SuperCollider engine that navigates it."
 updated: "March 2026"
-categories: ["Data & ML"]
 sortOrder: 30
 tags: ["ml", "audio", "generative", "data"]
 stack: ["SuperCollider", "Python", "librosa / numpy", "UMAP", "Flask", "Plotly WebGL", "REAPER"]
@@ -15,18 +14,18 @@ audioFiles:
 draft: false
 ---
 
-Last September, I recorded a string quintet playing through an "orchestra of objects" — cymbals, gongs, piano frames, sheets of metal and paper — with extended-range microphones that capture above the limit of human hearing. I then analyzed and mapped those recordings and wrote a program to traverse the map in real time for a 14-speaker room. This became a piece that was shown at the [Haus für Medienkunst](https://hausmedienkunst.de/en/) in Oldenburg from March through May 2026.
+Last September, I recorded a string quintet playing through an orchestra of objects (cymbals, gongs, piano frames, sheets of metal and paper) with extended-range microphones that record above the limit of human hearing. I analyzed and mapped the recordings and wrote a program to traverse the map in real time for a 14-speaker room at the [Haus für Medienkunst](https://hausmedienkunst.de/en/) from March through May 2026.
 
-## Part I: The Recording
+## Part I: Recording
 
-We only had an evening at [Studio Richter Mahr](https://studiorichtermahr.com/) to set up before the musicians arrived for two days. Chris Kalcov masterfully engineered an immaculate recording and re-amping system for over 32 channels on a Neve 5088 (RME Horus / MADI) at 192 kHz, operating at the very limit of what the equipment and the room could handle. I recorded with four friends (Kirke, Caius, Amanda, and Evie) and played violin myself.
+We had one evening at [Studio Richter Mahr](https://studiorichtermahr.com/) to set up before the musicians arrived for two days. Chris Kalcov masterfully engineered an immaculate recording and re-amping system for over 32 channels on a Neve 5088 (RME Horus / MADI) at 192 kHz, operating at the very limit of what the equipment and the room could manage. I recorded with four musician friends and played violin myself.
 
 <figure>
   <img src="/images/log/antiphon/control-room.jpg" alt="A large-format mixing console in a wood-panelled control room, the live room visible through the glass." loading="lazy" decoding="async" />
   <figcaption>The control room.</figcaption>
 </figure>
 
-We ended up recording 10 hours over the course of 2 days — around 700 GB of audio. At night, Chris let the recordings from each day play back through the objects and re-recorded the result.
+We ended up recording 10 hours of audio over two days, or about 700 GB. At night, Chris played back the recordings from the day through the objects and re-recorded the result.
 
 <div class="log-grid log-grid-2-3">
   <figure>
@@ -62,19 +61,19 @@ The instructions for the session were broad and open, relying on the improvisato
 
 ## Part II: The Corpus
 
-The corpus was large: 1,615 files, many of them long, up to 45 minutes. And the material I cared most about was ultrasonic, which meant slowing the audio to a quarter speed to bring it into the audible range, quadrupling the duration.
+The corpus consisted of 1,615 files, many of them as long as 45 minutes. The material I cared most about was ultrasonic, which meant slowing the audio to a quarter speed to bring it into the audible range, quadrupling the duration.
 
-Trying to build systematically, take by take, quickly became overwhelming. So instead I turned to a process-based approach, thinking of the recordings as raw material and the act of composing as subtractive, like chiseling a sculpture from stone. In contrast to my installation work, which finds sound at the end of a long road of trial and error, this began with sound, structured by subtraction, layering, and transposition.
+Trying to build systematically, take by take, quickly became overwhelming. So instead I turned to a process-based approach, thinking of the recordings as raw material and the act of composing as subtractive. In contrast to my installation work, which finds sound at the end of a long road of trial and error, this began with sound, structured by subtraction, layering, and transposition.
 
-I decided to organize the corpus by timbre, creating an algorithmic aleatoric method of moving through that multidimensional space. Each speaker was a single "voice", clustered near other speakers by timbre, but sounding a distinct take or microphone perspective. So you might expect that the mic recording the brass sheet would be timbrally very similar to the same moment in time through the steel sheet, or through a cymbal. Speaker 1 would then play back the recording of the brass while speaker 2 would play the same instant through the steel. But then maybe a totally different moment in time turns out to be timbrally similar to another — or one material is unexpectedly similar to another (e.g., paper and a bass drum) — and the corpus traversal starts to bridge and fracture through the material in more interesting, web-like ways.
+I organized the corpus by timbre, creating an aleatoric program to move through that multidimensional space. Each speaker was a single "voice", clustered near other speakers by timbre, but sounding a distinct take or microphone perspective. So you might expect that the mic recording the brass sheet would be timbrally very similar to the same moment in time through the steel sheet, or through a cymbal. Speaker 1 would then play back the recording of the brass while speaker 2 would play the same instant through the steel. But then maybe a totally different moment in time turns out to be timbrally similar to another — or one material is unexpectedly similar to another (e.g., paper and a bass drum) — and the corpus traversal starts to bridge and fracture through the material in more interesting, web-like ways.
 
 ## Part III: Process
 
-First, I analyzed the material. I sliced the corpus into 303,799 five-second windows (2.5-second hop) and extracted 34 descriptive features per window (spectral centroid, flatness, flux, contrast and rolloff; pitch and a custom pitch-confidence; 13 [MFCCs](https://en.wikipedia.org/wiki/Mel-frequency_cepstrum); a 20–75 Hz "roughness" measure; and an ultrasonic-energy ratio computed at the native sample rate). The augmentation pass ran about 12 hours.
+First, I analyzed the material. I sliced the corpus into 303,799 five-second windows (2.5-second hop) and extracted 34 descriptive features per window (spectral centroid, flatness, flux, contrast and rolloff; pitch and a custom pitch-confidence; 13 [MFCCs](https://en.wikipedia.org/wiki/Mel-frequency_cepstrum); a 20–75 Hz "roughness" measure; and an ultrasonic-energy ratio computed at the native sample rate). The analysis pass ran about 12 hours.
 
 A separate rule-based pass flagged the windows that were really between-take talking — count-ins, discussion — so the map wouldn't fill up with speech (about 3.8% of windows).
 
-Everything was recorded at 192 kHz, and 72% of the files had real content above 20 kHz; the presence of ultrasonic-energy tells the program to pull that material out on its own.
+Everything was recorded at 192 kHz, and 72% of the files had real content above 20 kHz; the presence of ultrasonic energy tells the program to pull that material out on its own.
 
 To make that 34-dimensional space walkable, I used [UMAP](https://umap-learn.readthedocs.io/), which collapses those features to a 2-D map you can look at. I fit UMAP on a stratified 100k subsample and `.transform()`-ed the remaining 203k onto it (`n_neighbors=15, min_dist=0.05`). Color the result by recording layer, roughness, or ultrasonic content and the structure of the sessions looks like splashes of paint or vapor:
 

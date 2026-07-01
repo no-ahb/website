@@ -3,7 +3,6 @@ title: "TutorDash"
 subtitle: "From an auto-grader to a full SaaS platform"
 summary: "An auto-grader for my own SAT worksheets that became a full SaaS platform for running a tutoring business — scheduling, digital worksheets, per-question skill tracking, AI lesson reports, and Stripe billing — now used by agencies in place of TeachWorks and TutorCruncher."
 updated: "June 2026"
-categories: ["Patches & UI", "Data & ML"]
 sortOrder: 35
 tags: ["web", "saas", "next.js", "supabase", "stripe", "ai"]
 stack: ["Next.js 16 / React 19", "TypeScript", "Supabase (Postgres + RLS)", "Clerk", "Stripe Connect", "Resend", "AssemblyAI"]
@@ -17,7 +16,7 @@ draft: false
 
 I've tutored SAT and ACT as a side gig for a couple of years. The teaching was fun; the admin was not: (re-)scheduling lessons, sending homework, grading worksheets by hand, writing a recap email after every class, and keeping track of student progress across 10–15 students a week.
 
-In late 2025 I built a small tool to autograde worksheets. Within a few months, that autograder became a fully fledged platform that runs the whole lifecycle of a tutoring business. It now has paying subscribers — agencies running their tutors, students, and admins on it full-time, replacing decade-old systems like TeachWorks and TutorCruncher.
+In late 2025 I built a small tool to autograde worksheets. Within a few months, that autograder became a full-fledged platform that runs the whole lifecycle of a tutoring business. It now has paying subscribers — agencies running their tutors, students, and admins on it full-time, replacing decade-old systems like TeachWorks and TutorCruncher.
 
 ## From an auto-grader to a platform
 
@@ -55,7 +54,7 @@ Tutors can bring their own materials — PDFs, worksheets, whatever — and a Py
 
 <figure>
   <img src="/images/log/tutordash/materials-list.png" alt="The materials catalog: a table of numbered worksheets with subject, question count, and skills covered, plus tabs for Worksheets, Skill Drills, and Practice Tests." loading="lazy" decoding="async" />
-  <figcaption>Worksheets, skill drills, and practice tests, each numbered, subject-tagged, and labelled with the skills it covers.</figcaption>
+  <figcaption>Worksheets, skill drills, and practice tests, each numbered, subject-tagged, and labeled with the skills it covers.</figcaption>
 </figure>
 
 <div class="log-gallery">
@@ -84,7 +83,7 @@ Every question is tagged to a skill, so all work on the platform becomes a data 
 
 <div class="log-duo">
   <figure>
-    <img src="/images/log/tutordash/skills-radar.png" alt="A skill analysis view: a radar chart across SAT domains alongside labelled mastery bars (Info &amp; Ideas 100%, Adv. Math 51% 'Needs Focus', etc.) and a list of weakest skills with accuracy and confidence." loading="lazy" decoding="async" />
+    <img src="/images/log/tutordash/skills-radar.png" alt="A skill analysis view: a radar chart across SAT domains alongside labeled mastery bars (Info &amp; Ideas 100%, Adv. Math 51% 'Needs Focus', etc.) and a list of weakest skills with accuracy and confidence." loading="lazy" decoding="async" />
     <figcaption>Twenty-five skills tracked.</figcaption>
   </figure>
   <figure>
@@ -95,7 +94,7 @@ Every question is tagged to a skill, so all work on the platform becomes a data 
 
 ## Automatic reports
 
-After a lesson, the platform drafts the report. It reads the session's submissions and turns them into a parent-facing recap: what we worked on, what improved, what to practise. Every recap, reminder, and registration nudge is delivered through Resend. Lesson audio is transcribed through AssemblyAI to ground the write-up.
+After a lesson, the platform drafts the report. It reads the session's submissions and turns them into a parent-facing recap: what we worked on, what improved, what to practice. Every recap, reminder, and registration nudge is delivered through Resend. Lesson audio is transcribed through AssemblyAI to ground the write-up.
 
 <div class="log-duo">
   <figure>
@@ -129,14 +128,14 @@ Parents pay by card through Stripe Connect, landing directly in the tutor's own 
     <figcaption>Money in.</figcaption>
   </figure>
   <figure>
-    <img src="/images/log/tutordash/billing-money-out.png" alt="The billing 'Money out' view: Stripe connected and active, next bill with the Pro plan line and itemised offline-payment fees." loading="lazy" decoding="async" />
+    <img src="/images/log/tutordash/billing-money-out.png" alt="The billing 'Money out' view: Stripe connected and active, next bill with the Pro plan line and itemized offline-payment fees." loading="lazy" decoding="async" />
     <figcaption>Money out.</figcaption>
   </figure>
 </div>
 
 ## One platform, many tenants
 
-The product is a fully fledged, multi-tenant B2B platform. A super-admin *mission control* sits across every organisation, tutor, and student on the system: projected ARR and MRR, net revenue retention, churn, active students, failed payments, and pending payouts, with auto-detected signals flagging the feedback and bug reports that need attention. Organisations have their own tutors and admins; tutors have their own students; the data boundaries are enforced in Postgres with row-level security. This turns a tool I built for myself into software other businesses can run on.
+The product is a full-fledged, multi-tenant B2B platform. A super-admin *mission control* sits across every organization, tutor, and student on the system: projected ARR and MRR, net revenue retention, churn, active students, failed payments, and pending payouts, with auto-detected signals flagging the feedback and bug reports that need attention. Organizations have their own tutors and admins; tutors have their own students; the data boundaries are enforced in Postgres with row-level security. This turns a tool I built for myself into software other businesses can run on.
 
 <figure>
   <img src="/images/log/tutordash/admin-mission-control.png" alt="A dark-mode super-admin 'Mission control' dashboard: ARR, MRR, net new MRR, NRR, churn, active students, failed payments and pending payouts across the top; daily revenue and net-new-MRR charts; a signals panel with feedback and bug counts; and engagement metrics." loading="lazy" decoding="async" />

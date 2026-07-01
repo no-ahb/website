@@ -3,7 +3,6 @@ title: "Suspension"
 subtitle: "Firmware for self-oscillating strings"
 summary: "Nine piano wires sustained by electromagnetic feedback, each running a Daisy Seed with eight self-tuning mechanisms — built so the installation ran unattended for two months and no knob could break it."
 updated: "March 2026"
-categories: ["Hardware & PCBs"]
 sortOrder: 20
 tags: ["hardware", "firmware", "dsp"]
 stack: ["Daisy Seed", "DaisyDuino / C++", "real-time DSP", "electromagnetic pickup", "OPA2134 preamp", "electromagnetic driver"]
@@ -25,7 +24,7 @@ This feedback loop of energy allows the string to find its own natural resonance
 
 <figure>
   <img src="/images/log/suspension/measured-strings.jpg" alt="Coils of steel piano wire with galvanized eyebolt terminations and masking-tape labels, on a workbench." loading="lazy" decoding="async" />
-  <figcaption>The nine wires, each cut to the length its tuning needs and labelled before hanging.</figcaption>
+  <figcaption>The nine wires, each cut to the length its tuning needs and labeled before hanging.</figcaption>
 </figure>
 
 My goal was to find balance, a delicate middle region between extremes, and constrain the feedback loop to that small area so it could run unattended for the full two-month exhibition. I wanted it to ebb and flow between harmonics on its own while never going fully silent.
@@ -62,7 +61,7 @@ The knobs are the voicing layer determining how hard a string is driven (pickup 
 
 ### The preamp
 
-Getting the signal into the DSP chain cleanly was the biggest hardware challenge. The pickup is an electromagnetic coil (42 AWG wound to about 550 Ω) so it has a high, inductive source impedance. The preamp has to be as silent as possible before it is amplified and fed back into a feedback loop, where any hiss can quickly get out of hand. The preamp is built around an [OPA2134](https://www.ti.com/product/OPA2134) JFET-input op-amp on a single +12 V supply at 11× gain. Most anti-hiss protection is in the layout. A split analog/power ground is joined at one point, there's a separately filtered supply rail for the op-amp, the Class-D driver amplifier is kept on its own board, there are film capacitors in the signal path, and the input and output routed perpendicular to each other so the amplified output can't leak back into the high-impedance input and oscillate through the board.
+Getting the signal into the DSP chain cleanly was the biggest hardware challenge. The pickup is an electromagnetic coil (42 AWG wound to about 550 Ω) so it has a high, inductive source impedance. The preamp has to be as silent as possible before it is amplified and fed back into a feedback loop, where any hiss can quickly get out of hand. The preamp is built around an [OPA2134](https://www.ti.com/product/OPA2134) JFET-input op-amp on a single +12 V supply at 11× gain. Most anti-hiss protection is in the layout. A split analog/power ground is joined at one point, there's a separately filtered supply rail for the op-amp, the Class-D driver amplifier is kept on its own board, there are film capacitors in the signal path, and the input and output are routed perpendicular to each other so the amplified output can't leak back into the high-impedance input and oscillate through the board.
 
 Each board drives two outputs: the electromagnetic driver (a heavier, ~28 AWG coil, about 5.1–5.3 Ω) gets the fully processed feedback signal that keeps the string moving, while a separate line sends the raw pickup signal to the room speakers so the audience hears the string itself, unprocessed.
 
