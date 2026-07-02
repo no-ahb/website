@@ -172,12 +172,14 @@ const hoverLight = (i: number) =>
     )}
   </div>
 
-  <script define:vars={{ schedule }}>
+  <script is:inline data-astro-rerun define:vars={{ schedule }}>
     // Shuffle the pen-draw order on every load. Each box (the LOG label + every study) is tagged
     // data-box="0…N" and carries a build-time --start (reading-order slot, the no-JS fallback). Here
     // we deal out the same fixed set of start times (`schedule`, eased in index.astro) in a random
     // order, so the boxes draw in a different sequence each visit while the runtime stays identical.
     // Runs before first paint (define:vars renders this inline) so it lands before the boxes draw.
+    // data-astro-rerun: with the ClientRouter this must re-execute on every client-side visit
+    // to /log — it re-deals the fresh DOM and re-arms the LOG-box replay click.
     (function () {
       var els = document.querySelectorAll('[data-box]');
       if (!els.length) return;
@@ -215,14 +217,23 @@ const hoverLight = (i: number) =>
   <script>
     // Two-pane master–detail. Desktop only (pointer + width); on touch / narrow screens
     // the cards keep their plain anchors and navigate to the standalone /log/<slug>/ page.
-    const col = document.querySelector<HTMLElement>('.log-detail-col');
-    const stage = document.querySelector<HTMLElement>('.log-stage');
-    // Live media query (not a one-time snapshot): checked inside the handlers so the
-    // behavior follows viewport changes — resize past the breakpoint and the panels
-    // work without a reload; below it, cards fall back to plain-anchor navigation.
-    const mql = window.matchMedia('(hover: hover) and (min-width: 901px)');
+    // Re-initialized on every client-side navigation; the previous page's document-level
+    // Escape listener tears down via the AbortController.
+    let paneCtrl: AbortController | null = null;
 
-    if (col && stage) {
+    function initLogPanes() {
+      paneCtrl?.abort();
+      paneCtrl = null;
+      const col = document.querySelector<HTMLElement>('.log-detail-col');
+      const stage = document.querySelector<HTMLElement>('.log-stage');
+      if (!col || !stage) return;
+      paneCtrl = new AbortController();
+      const { signal } = paneCtrl;
+      // Live media query (not a one-time snapshot): checked inside the handlers so the
+      // behavior follows viewport changes — resize past the breakpoint and the panels
+      // work without a reload; below it, cards fall back to plain-anchor navigation.
+      const mql = window.matchMedia('(hover: hover) and (min-width: 901px)');
+
       const cards = Array.from(document.querySelectorAll<HTMLElement>('.log-card'));
       const panels = new Map<string, HTMLElement>();
       document.querySelectorAll<HTMLElement>('.log-panel').forEach((p) => {
@@ -316,7 +327,7 @@ const hoverLight = (i: number) =>
         if (e.key !== 'Escape' || openKey === null) return;
         if (document.querySelector('.log-lightbox, .iphone-lightbox')) return;
         closePanel();
-      });
+      }, { signal });
 
       cards.forEach((card) => {
         const key = card.getAttribute('data-key');
@@ -341,5 +352,6 @@ const hoverLight = (i: number) =>
         btn.addEventListener('click', closePanel);
       });
     }
+    document.addEventListener('astro:page-load', initLogPanes);
   </script>
 </Base>

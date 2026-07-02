@@ -288,10 +288,12 @@ hr {
   width: 100%; height: 100%;
   object-fit: cover;
   opacity: 0;
-  transition: opacity 0.8s ease;
+  /* Settles 6px into place as it fades in — the same gesture as the /log hover previews. */
+  transform: translateY(6px);
+  transition: opacity 0.8s ease, transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 .work-card.video-active .work-card-media video,
-.work-card.playing .work-card-media video { opacity: 1; }
+.work-card.playing .work-card-media video { opacity: 1; transform: translateY(0); }
 
 .work-card-sound-toggle {
   position: absolute; bottom: 12px; right: 12px;
@@ -1787,4 +1789,114 @@ video.browser-shot { aspect-ratio: 336 / 185; }
   .log-detail-title { font-size: 1.6rem; }
   .log-detail-body figure { margin: 1.75rem auto; }
   .log-hero img { max-height: 62vh; }
+}
+
+/* -- Mini player -- */
+/* A small square, bottom right, that carries the playing piece when its inline player
+   isn't on screen (scrolled away, or on another page — audio survives navigation).
+   Same ink language as the audio players: hairline border, one 1px line. */
+.mini-player {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 150;
+  width: 10.5rem;
+  aspect-ratio: 1 / 1;
+  padding: 0.95rem;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transform: translateY(6px);
+  pointer-events: none;
+  transition: opacity 0.35s ease, transform 0.45s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.mini-player.is-shown { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.mini-player-title {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.35;
+  color: var(--color-title);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.mini-player-toggle {
+  margin: auto 0;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(0, 0, 0, 0.75);
+  padding: 0;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.mini-player-toggle:hover { border-color: rgba(0, 0, 0, 0.4); color: rgba(0, 0, 0, 0.9); }
+.mini-player .icon-pause { display: none; }
+.mini-player.is-playing .icon-play { display: none; }
+.mini-player.is-playing .icon-pause { display: block; }
+.mini-player-foot { display: flex; flex-direction: column; gap: 0.5rem; }
+.mini-player-line { position: relative; height: 1px; background: rgba(0, 0, 0, 0.1); cursor: pointer; }
+.mini-player-line::after { content: ""; position: absolute; inset: -7px 0; } /* fat hit target */
+.mini-player-fill { position: absolute; left: 0; top: 0; height: 100%; width: 0%; background: rgba(0, 0, 0, 0.55); }
+.mini-player-time {
+  font-size: 11px;
+  color: var(--color-meta);
+  letter-spacing: 0.03em;
+  font-variant-numeric: tabular-nums;
+  text-align: right; /* the duration sits in the square's bottom-right corner */
+}
+@media (max-width: 768px) {
+  .mini-player { right: 12px; bottom: 12px; width: 9.5rem; }
+}
+
+/* -- Next-work footer: the walk to the next room -- */
+.work-next {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 1.25rem;
+  margin-top: 3.5rem;
+  padding-top: 1.6rem;
+}
+.work-next::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: var(--color-rule);
+  transform: scaleY(0.5);
+  transform-origin: top;
+  pointer-events: none;
+}
+.work-next-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-meta);
+}
+.work-next-title {
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  color: var(--color-text);
+  transition: color 0.15s ease;
+}
+.work-next:hover { opacity: 1; }
+.work-next:hover .work-next-title { color: var(--color-accent-works); }
+
+/* View transitions honor reduced motion: no cross-fade, no morph. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-image-pair(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) { animation: none !important; }
 }

@@ -6,15 +6,19 @@ import { getCollection, render } from 'astro:content';
 
 export async function getStaticPaths() {
   const works = await getCollection('works', ({ data }) => !data.draft);
-  return works.map((work) => ({
+  // Same order as the works index (sortOrder descending); each page links to the next
+  // work in that sequence, wrapping at the end, so the site walks like gallery rooms.
+  const sorted = works.sort((a, b) => (b.data.sortOrder ?? 0) - (a.data.sortOrder ?? 0));
+  return sorted.map((work, i) => ({
     params: { slug: work.id },
-    props: { work },
+    props: { work, next: sorted[(i + 1) % sorted.length] },
   }));
 }
 
 import { asset } from '../../lib/asset';
 
-const { work } = Astro.props;
+const { work, next } = Astro.props;
+const base = import.meta.env.BASE_URL;
 const { Content } = await render(work);
 const siteUrl = Astro.site?.origin ?? 'https://noahberrie.com';
 
@@ -71,6 +75,7 @@ const jsonLd = {
                     : `${work.data.title} — documentation image ${i + 1}`}
                   loading={i === 0 ? "eager" : "lazy"}
                   fetchpriority={i === 0 ? "high" : undefined}
+                  transition:name={i === 0 ? `work-img-${work.id}` : undefined}
                 />
               ))}
             </div>
@@ -153,8 +158,11 @@ const jsonLd = {
           </div>
         )}
 
-        <script is:inline define:vars={{ workTitle: work.data.title }}>
-          function trackVideoWatch(video, work, src) {
+        <script>
+          // Video facades. The work title is read from the button's
+          // data-umami-event-work attribute (set by VideoEmbed), and the buttons are
+          // re-bound on every client-side navigation — fresh DOM per swap.
+          function trackVideoWatch(video: HTMLVideoElement, work: string, src: string) {
             let startedAt = 0;
             let totalMs = 0;
             let fired = false;
@@ -165,7 +173,7 @@ const jsonLd = {
                 startedAt = 0;
               }
             }
-            function fire(reason) {
+            function fire(reason: string) {
               if (fired) return;
               markStop();
               if (totalMs < 3000) return;
@@ -173,7 +181,7 @@ const jsonLd = {
               const dur = video.duration || 0;
               const seconds = Math.round(totalMs / 1000);
               const pct = dur ? Math.min(100, Math.round((totalMs / 1000 / dur) * 100)) : 0;
-              window.umami?.track?.('video-end', { work, src, seconds, pct, reason });
+              (window as any).umami?.track?.('video-end', { work, src, seconds, pct, reason });
             }
             video.addEventListener('play', markPlay);
             video.addEventListener('pause', markStop);
@@ -181,29 +189,32 @@ const jsonLd = {
             window.addEventListener('pagehide', () => fire('leave'), { once: true });
           }
 
-          document.querySelectorAll('.video-facade').forEach((btn) => {
-            btn.addEventListener('click', () => {
-              const local = btn.getAttribute('data-local-src');
-              const yt = btn.getAttribute('data-yt-src');
-              if (local) {
-                const v = document.createElement('video');
-                v.src = local;
-                v.controls = true;
-                v.autoplay = true;
-                v.playsInline = true;
-                v.preload = 'metadata';
-                v.title = btn.getAttribute('aria-label') || '';
-                btn.replaceWith(v);
-                v.play?.().catch(() => {});
-                trackVideoWatch(v, workTitle, local);
-              } else if (yt) {
-                const iframe = document.createElement('iframe');
-                iframe.src = yt;
-                iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture; gyroscope; accelerometer');
-                iframe.setAttribute('allowfullscreen', '');
-                iframe.title = btn.getAttribute('aria-label') || '';
-                btn.replaceWith(iframe);
-              }
+          document.addEventListener('astro:page-load', () => {
+            document.querySelectorAll<HTMLButtonElement>('.work-detail .video-facade').forEach((btn) => {
+              btn.addEventListener('click', () => {
+                const local = btn.getAttribute('data-local-src');
+                const yt = btn.getAttribute('data-yt-src');
+                const work = btn.getAttribute('data-umami-event-work') || '';
+                if (local) {
+                  const v = document.createElement('video');
+                  v.src = local;
+                  v.controls = true;
+                  v.autoplay = true;
+                  v.playsInline = true;
+                  v.preload = 'metadata';
+                  v.title = btn.getAttribute('aria-label') || '';
+                  btn.replaceWith(v);
+                  v.play?.().catch(() => {});
+                  trackVideoWatch(v, work, local);
+                } else if (yt) {
+                  const iframe = document.createElement('iframe');
+                  iframe.src = yt;
+                  iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture; gyroscope; accelerometer');
+                  iframe.setAttribute('allowfullscreen', '');
+                  iframe.title = btn.getAttribute('aria-label') || '';
+                  btn.replaceWith(iframe);
+                }
+              });
             });
           });
         </script>
@@ -240,6 +251,13 @@ const jsonLd = {
               <p class="work-exhibition-description">{work.data.exhibitionDescription}</p>
             )}
           </div>
+        )}
+
+        {next && next.id !== work.id && (
+          <a class="work-next" href={`${base}works/${next.id}/`}>
+            <span class="work-next-label">Next</span>
+            <span class="work-next-title">{next.data.title.toUpperCase()} →</span>
+          </a>
         )}
       </div>
     </div>

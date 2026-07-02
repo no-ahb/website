@@ -188,7 +188,9 @@ const frameHost = post.data.frameUrl || (post.data.demo ? hostOf(post.data.demo)
     window.addEventListener('pagehide', () => fire('leave'), { once: true });
   }
 
-  document.querySelectorAll<HTMLButtonElement>('.log-detail .video-facade').forEach((btn) => {
+  // Re-bound per client-side navigation (fresh buttons every swap).
+  document.addEventListener('astro:page-load', () => {
+    document.querySelectorAll<HTMLButtonElement>('.log-detail .video-facade').forEach((btn) => {
     btn.addEventListener('click', () => {
       const local = btn.getAttribute('data-local-src');
       const yt = btn.getAttribute('data-yt-src');
@@ -213,18 +215,21 @@ const frameHost = post.data.frameUrl || (post.data.demo ? hostOf(post.data.demo)
         btn.replaceWith(iframe);
       }
     });
+    });
   });
 </script>
 
 <script>
   // Wiki behavior: open external reference links in a new tab; keep internal
   // cross-links (other /log studies, /works pages) navigating in place.
-  document.querySelectorAll<HTMLAnchorElement>('.log-detail-body a[href^="http"]').forEach((a) => {
-    // Anchor elements expose a parsed `.hostname` directly — no need to construct a URL.
-    if (a.hostname !== location.hostname) {
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
-    }
+  document.addEventListener('astro:page-load', () => {
+    document.querySelectorAll<HTMLAnchorElement>('.log-detail-body a[href^="http"]').forEach((a) => {
+      // Anchor elements expose a parsed `.hostname` directly — no need to construct a URL.
+      if (a.hostname !== location.hostname) {
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+      }
+    });
   });
 </script>
 
@@ -233,9 +238,20 @@ const frameHost = post.data.frameUrl || (post.data.demo ? hostOf(post.data.demo)
      opened, so the observer starts playback the moment a panel is shown and pauses it
      when closed. The gesture retry covers autoplay-blocking extensions. -->
 <script>
-  (() => {
+  // Re-initialized per client-side navigation: previous observer/window listeners
+  // tear down via disconnect + AbortController.
+  let heroIO: IntersectionObserver | null = null;
+  let heroCtrl: AbortController | null = null;
+
+  function initHeroVideos() {
+    heroIO?.disconnect();
+    heroCtrl?.abort();
+    heroIO = null;
+    heroCtrl = null;
     const vids = Array.from(document.querySelectorAll<HTMLVideoElement>('video.browser-shot'));
     if (!vids.length) return;
+    heroCtrl = new AbortController();
+    const { signal } = heroCtrl;
     const play = (v: HTMLVideoElement) => {
       v.muted = true;
       v.playsInline = true;
@@ -243,13 +259,13 @@ const frameHost = post.data.frameUrl || (post.data.demo ? hostOf(post.data.demo)
       if (r) r.catch(() => {});
     };
     if ('IntersectionObserver' in window) {
-      const io = new IntersectionObserver((entries) => {
+      heroIO = new IntersectionObserver((entries) => {
         entries.forEach((e) => {
           const v = e.target as HTMLVideoElement;
           if (e.isIntersecting) play(v); else v.pause();
         });
       }, { threshold: 0.2 });
-      vids.forEach((v) => io.observe(v));
+      vids.forEach((v) => heroIO!.observe(v));
     } else {
       vids.forEach(play);
     }
@@ -258,17 +274,16 @@ const frameHost = post.data.frameUrl || (post.data.demo ? hostOf(post.data.demo)
       const r = v.getBoundingClientRect();
       if (v.paused && r.width > 0 && r.bottom > 0 && r.top < window.innerHeight) play(v);
     });
-    window.addEventListener('pointerdown', kick);
-    window.addEventListener('keydown', kick);
-  })();
+    window.addEventListener('pointerdown', kick, { signal });
+    window.addEventListener('keydown', kick, { signal });
+  }
+  document.addEventListener('astro:page-load', initHeroVideos);
 </script>
 
 <!-- Lightbox: click a contact-sheet thumbnail to view it full-size floating over the
      article; click anywhere (or press Escape) to dismiss. -->
 <script>
   (() => {
-    const thumbs = document.querySelectorAll<HTMLImageElement>('.log-detail-body figure img, .log-hero img');
-    if (!thumbs.length) return;
     let overlay: HTMLDivElement | null = null;
     const remove = () => {
       if (!overlay) return;
@@ -311,15 +326,20 @@ const frameHost = post.data.frameUrl || (post.data.demo ? hostOf(post.data.demo)
       requestAnimationFrame(() => overlay!.classList.add('is-open'));
       document.addEventListener('keydown', onKey);
     };
-    thumbs.forEach((img) => {
-      img.addEventListener('click', () => {
-        const fig = img.closest('figure');
-        const cap = fig && fig.querySelector('figcaption');
-        // Framed = the figure opts into a faux browser window — a `browserFrame` hero or
-        // body (TutorDash), or Micro Software's .winshot / .log-duo--framed figures. The
-        // lightbox then re-draws the chrome bar around the enlarged shot.
-        const framed = !!img.closest('.log-hero--browser, .log-detail-body--framed figure, figure.winshot, .log-duo--framed figure');
-        open(img.currentSrc || img.src, img.alt, cap && cap.textContent ? cap.textContent.trim() : null, framed);
+    // Thumbs are re-bound per client-side navigation (fresh DOM); a leftover open
+    // overlay from the previous page is torn down so its Escape handler doesn't leak.
+    document.addEventListener('astro:page-load', () => {
+      remove();
+      document.querySelectorAll<HTMLImageElement>('.log-detail-body figure img, .log-hero img').forEach((img) => {
+        img.addEventListener('click', () => {
+          const fig = img.closest('figure');
+          const cap = fig && fig.querySelector('figcaption');
+          // Framed = the figure opts into a faux browser window — a `browserFrame` hero or
+          // body (TutorDash), or Micro Software's .winshot / .log-duo--framed figures. The
+          // lightbox then re-draws the chrome bar around the enlarged shot.
+          const framed = !!img.closest('.log-hero--browser, .log-detail-body--framed figure, figure.winshot, .log-duo--framed figure');
+          open(img.currentSrc || img.src, img.alt, cap && cap.textContent ? cap.textContent.trim() : null, framed);
+        });
       });
     });
   })();

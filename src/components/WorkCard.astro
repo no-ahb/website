@@ -21,7 +21,7 @@ const altText = `${title} by Noah Berrie — ${medium}, ${year}`;
 <a href={`${base}works/${slug}/`} class="work-card reveal" data-has-video={videoPreview ? 'true' : undefined}>
   <div class="work-card-media">
     {thumbnail ? (
-      <img src={thumbnail ? asset(thumbnail) : undefined} alt={altText} loading="lazy" style={thumbnailPosition ? `object-position: ${thumbnailPosition}` : undefined} />
+      <img src={thumbnail ? asset(thumbnail) : undefined} alt={altText} loading="lazy" style={thumbnailPosition ? `object-position: ${thumbnailPosition}` : undefined} transition:name={`work-img-${slug}`} />
     ) : (
       <div class="placeholder" role="img" aria-label={altText}>
         {title}
@@ -62,9 +62,12 @@ const altText = `${title} by Noah Berrie — ${medium}, ${year}`;
 </a>
 
 <script>
-  const isMobile = 'ontouchstart' in window || window.matchMedia('(max-width: 768px)').matches;
+  // Hover video previews. Re-bound on every client-side navigation — the cards are
+  // fresh DOM after each swap, so per-element listeners never stack.
+  document.addEventListener('astro:page-load', () => {
+    const isMobile = 'ontouchstart' in window || window.matchMedia('(max-width: 768px)').matches;
+    if (isMobile) return;
 
-  if (!isMobile) {
     document.querySelectorAll('.work-card[data-has-video]').forEach((card) => {
       const video = card.querySelector('video') as HTMLVideoElement | null;
       const soundBtn = card.querySelector('.work-card-sound-toggle') as HTMLButtonElement | null;
@@ -100,5 +103,5 @@ const altText = `${title} by Noah Berrie — ${medium}, ${year}`;
         });
       }
     });
-  }
+  });
 </script>
