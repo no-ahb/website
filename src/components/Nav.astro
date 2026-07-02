@@ -60,27 +60,30 @@ const sortedWorks = allWorks.sort((a, b) => (b.data.sortOrder ?? 0) - (a.data.so
 </nav>
 
 <script>
-  // Assemble obfuscated email links
-  document.querySelectorAll('.email-link').forEach(el => {
-    const u = (el as HTMLElement).dataset.u;
-    const d = (el as HTMLElement).dataset.d;
-    if (u && d) {
-      (el as HTMLAnchorElement).href = `mailto:${u}@${d}`;
-      el.textContent = `${u}@${d}`;
-    }
-  });
-
+  // Re-bound on every client-side navigation — the nav re-renders per page.
   let lastHue = -1;
-  document.querySelectorAll('.nav-contact a').forEach(link => {
-    link.addEventListener('mouseenter', () => {
-      let hue = Math.floor(Math.random() * 360);
-      let tries = 0;
-      while (Math.abs(hue - lastHue) < 60 && tries++ < 10) hue = Math.floor(Math.random() * 360);
-      lastHue = hue;
-      (link as HTMLElement).style.background = `hsla(${hue}, 80%, 65%, 0.3)`;
+  document.addEventListener('astro:page-load', () => {
+    // Assemble obfuscated email links
+    document.querySelectorAll('.email-link').forEach(el => {
+      const u = (el as HTMLElement).dataset.u;
+      const d = (el as HTMLElement).dataset.d;
+      if (u && d) {
+        (el as HTMLAnchorElement).href = `mailto:${u}@${d}`;
+        el.textContent = `${u}@${d}`;
+      }
     });
-    link.addEventListener('mouseleave', () => {
-      (link as HTMLElement).style.background = '';
+
+    document.querySelectorAll('.nav-contact a').forEach(link => {
+      link.addEventListener('mouseenter', () => {
+        let hue = Math.floor(Math.random() * 360);
+        let tries = 0;
+        while (Math.abs(hue - lastHue) < 60 && tries++ < 10) hue = Math.floor(Math.random() * 360);
+        lastHue = hue;
+        (link as HTMLElement).style.background = `hsla(${hue}, 80%, 65%, 0.3)`;
+      });
+      link.addEventListener('mouseleave', () => {
+        (link as HTMLElement).style.background = '';
+      });
     });
   });
 </script>

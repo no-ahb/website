@@ -10,8 +10,37 @@ import { asset } from '../lib/asset';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { parseFile } from 'music-metadata';
+import peaksMap from '../data/audio-peaks.json';
 
 const { src, title, work, clip } = Astro.props;
+
+// Waveform seekbar: pre-rendered peaks (scripts/generate-audio-peaks.mjs →
+// src/data/audio-peaks.json) drawn as vertical lines of varying height around a
+// horizontal hairline axis — tight but individually distinguishable (each bar fills
+// 2/3 of its slot, in viewBox units, so the bar:gap ratio holds at any rendered
+// size). The bars rest gray and turn black as the piece plays — the one place on
+// the site where gray is allowed, because it IS the progress state. Files without
+// peaks fall back to the plain hairline.
+const peaks: number[] | undefined = (peaksMap as Record<string, number[]>)[src];
+// `count` bars across the 0–200 viewBox, one M/V segment each, all in a single
+// stroked path; pair with stroke-width = (200/count) * 2/3 for a 2:1 bar:gap.
+const barsPath = (pk: number[], count: number): string => {
+  const step = 200 / count;
+  let d = '';
+  for (let i = 0; i < count; i++) {
+    const p = pk[Math.min(pk.length - 1, Math.round((i / (count - 1)) * (pk.length - 1)))];
+    const h = Math.max(0.8, p * 14);
+    const x = (i * step + step / 2).toFixed(2);
+    d += `M${x},${(16 - h).toFixed(1)}V${(16 + h).toFixed(1)}`;
+  }
+  return d;
+};
+const hasWave = !!(peaks && peaks.length > 1);
+// Bars render at a fixed 1px screen width (non-scaling stroke, the same weight as the
+// horizontal axis); the count sets the pitch — 280 across a ~700–800px track is a
+// ~1.5–2px gap. The mini box gets a sparser set for its ~150px width.
+const waveD = hasWave ? barsPath(peaks!, 280) : '';
+const waveMiniD = hasWave ? barsPath(peaks!, 56) : '';
 
 function fmtDuration(secs: number): string {
   if (!isFinite(secs) || secs <= 0) return '0:00';
@@ -30,7 +59,7 @@ try {
 } catch {}
 ---
 
-<div class="audio-player" data-src={asset(src)} data-title={title} data-work={work || title} data-clip={clip} data-duration={preDuration}>
+<div class="audio-player" data-src={asset(src)} data-title={title} data-work={work || title} data-clip={clip} data-duration={preDuration} data-wave-mini={waveMiniD || undefined}>
   <button class="audio-player-play" aria-label="Play">
     <svg class="icon-play" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
       <polygon points="6 3 20 12 6 21 6 3" />
@@ -42,9 +71,19 @@ try {
   </button>
 
   <div class="audio-player-track">
-    <div class="audio-player-progress">
-      <div class="audio-player-filled"></div>
-    </div>
+    {waveD ? (
+      <svg class="ap-wave" viewBox="0 0 200 32" preserveAspectRatio="none" aria-hidden="true">
+        <line class="ap-wave-axis" x1="0" y1="16" x2="200" y2="16" />
+        <path class="ap-wave-bars" d={waveD} />
+        <g class="ap-wave-clip" style="clip-path: inset(0 100% 0 0)">
+          <path class="ap-wave-fill" d={waveD} />
+        </g>
+      </svg>
+    ) : (
+      <div class="audio-player-progress">
+        <div class="audio-player-filled"></div>
+      </div>
+    )}
   </div>
 
   <span class="audio-player-time">0:00 / {preDuration}</span>
@@ -111,6 +150,34 @@ try {
     height: 2px;
   }
 
+  /* Waveform seekbar — tight vertical lines around a black hairline axis, always
+     visible. The bars rest gray and fill to black as the piece plays (the progress
+     clip reveals the black copy left-to-right). Bar stroke-width is in viewBox
+     units so the bar:gap ratio holds at any rendered size. */
+  .ap-wave {
+    display: block;
+    width: 100%;
+    height: 30px;
+  }
+  .ap-wave-axis {
+    stroke: var(--color-rule);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+  .ap-wave-bars {
+    fill: none;
+    stroke: rgba(0, 0, 0, 0.28);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke; /* 1px on screen — the axis line's exact weight */
+  }
+  .ap-wave-fill {
+    fill: none;
+    stroke: var(--color-rule);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+  .ap-wave-clip { transition: clip-path 0.1s linear; }
+
   .audio-player-time {
     flex-shrink: 0;
     font-size: 11px;
@@ -121,107 +188,93 @@ try {
 </style>
 
 <script>
-  document.querySelectorAll<HTMLElement>('.audio-player').forEach((player) => {
-    const src = player.dataset.src;
-    if (!src) return;
+  // Playback lives in the site-wide singleton (audio-manager.ts) so it survives
+  // client-side navigation; this script only binds each rendered player's UI to it.
+  // Re-runs on astro:page-load (fresh DOM every swap); the module-level nb:audio
+  // subscription and rAF loop always paint the currently bound elements.
+  import { nbAudio } from '../scripts/audio-manager';
 
-    const playBtn = player.querySelector('.audio-player-play') as HTMLButtonElement;
-    const track = player.querySelector('.audio-player-track') as HTMLElement;
-    const filled = player.querySelector('.audio-player-filled') as HTMLElement;
-    const timeEl = player.querySelector('.audio-player-time') as HTMLElement;
+  type Bound = {
+    root: HTMLElement;
+    playBtn: HTMLButtonElement;
+    track: HTMLElement;
+    filled: HTMLElement | null;
+    clip: SVGGElement | null;
+    timeEl: HTMLElement;
+    preDur: string;
+    meta: { src: string; title: string; work: string; clip?: string };
+  };
 
-    let audio: HTMLAudioElement | null = null;
-    let raf: number | null = null;
+  let bound: Bound[] = [];
+  let raf = 0;
 
-    function fmt(s: number): string {
-      if (!isFinite(s)) return '0:00';
-      const m = Math.floor(s / 60);
-      const sec = Math.floor(s % 60);
-      return `${m}:${sec.toString().padStart(2, '0')}`;
+  function fmt(s: number): string {
+    if (!isFinite(s)) return '0:00';
+    return `${Math.floor(s / 60)}:${Math.floor(s % 60).toString().padStart(2, '0')}`;
+  }
+
+  const isCurrent = (b: Bound) => nbAudio.meta?.src === b.meta.src;
+
+  function paint(b: Bound) {
+    const a = nbAudio.el;
+    const cur = isCurrent(b) && !!a;
+    b.root.classList.toggle('playing', cur && nbAudio.playing);
+    const dur = cur ? a!.duration || 0 : 0;
+    const t = cur ? a!.currentTime || 0 : 0;
+    const pct = dur ? (t / dur) * 100 : 0;
+    if (b.filled) b.filled.style.width = `${pct}%`;
+    if (b.clip) b.clip.style.clipPath = `inset(0 ${100 - pct}% 0 0)`;
+    b.timeEl.textContent = cur && dur ? `${fmt(t)} / ${fmt(dur)}` : `0:00 / ${b.preDur}`;
+  }
+
+  function paintAll() {
+    bound.forEach(paint);
+    cancelAnimationFrame(raf);
+    // Smooth fill while playing on this page; stops itself when playback stops.
+    if (nbAudio.playing && bound.some(isCurrent)) {
+      const loop = () => {
+        bound.filter(isCurrent).forEach(paint);
+        if (nbAudio.playing) raf = requestAnimationFrame(loop);
+      };
+      raf = requestAnimationFrame(loop);
     }
+  }
 
-    function tick() {
-      if (!audio) return;
-      const pct = audio.duration ? (audio.currentTime / audio.duration) * 100 : 0;
-      filled.style.width = `${pct}%`;
-      timeEl.textContent = `${fmt(audio.currentTime)} / ${fmt(audio.duration)}`;
-      if (!audio.paused) raf = requestAnimationFrame(tick);
-    }
+  document.addEventListener('nb:audio', paintAll);
 
-    function ensureAudio(): HTMLAudioElement {
-      if (!audio) {
-        audio = new Audio(src);
-        audio.preload = 'metadata';
-        audio.addEventListener('loadedmetadata', () => {
-          timeEl.textContent = `0:00 / ${fmt(audio!.duration)}`;
+  document.addEventListener('astro:page-load', () => {
+    bound = Array.from(document.querySelectorAll<HTMLElement>('.audio-player'))
+      .filter((p) => p.dataset.src)
+      .map((player) => {
+        const b: Bound = {
+          root: player,
+          playBtn: player.querySelector('.audio-player-play') as HTMLButtonElement,
+          track: player.querySelector('.audio-player-track') as HTMLElement,
+          filled: player.querySelector('.audio-player-filled'),
+          clip: player.querySelector('.ap-wave-clip'),
+          timeEl: player.querySelector('.audio-player-time') as HTMLElement,
+          preDur: player.dataset.duration || '0:00',
+          meta: {
+            src: player.dataset.src!,
+            title: player.dataset.title || '',
+            work: player.dataset.work || player.dataset.title || '',
+            clip: player.dataset.clip || undefined,
+            href: location.pathname,                        // the page this piece lives on
+            waveMini: player.dataset.waveMini || '',        // sparse bars for the mini-player
+          },
+        };
+        b.playBtn.addEventListener('click', () => {
+          if (isCurrent(b)) nbAudio.toggle();
+          else nbAudio.play(b.meta);
         });
-        audio.addEventListener('pause', markStop);
-        audio.addEventListener('ended', () => {
-          player.classList.remove('playing');
-          filled.style.width = '0%';
-          audio!.currentTime = 0;
-          timeEl.textContent = `0:00 / ${fmt(audio!.duration)}`;
-          fireDuration('ended');
+        b.track.addEventListener('click', (e) => {
+          const rect = b.track.getBoundingClientRect();
+          const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+          if (isCurrent(b)) nbAudio.seekPct(pct);
+          else nbAudio.play(b.meta);
         });
-      }
-      return audio;
-    }
-
-    const title = player.dataset.title || '';
-    const work = player.dataset.work || title;
-    const clip = player.dataset.clip || undefined;
-    let trackedPlay = false;
-    let playStartedAt = 0;
-    let totalMs = 0;
-    let durationFired = false;
-
-    function markPlay() { if (playStartedAt === 0) playStartedAt = Date.now(); }
-    function markStop() {
-      if (playStartedAt !== 0) {
-        totalMs += Date.now() - playStartedAt;
-        playStartedAt = 0;
-      }
-    }
-    function fireDuration(reason: string) {
-      if (durationFired) return;
-      markStop();
-      if (totalMs < 3000) return;
-      durationFired = true;
-      const dur = audio?.duration || 0;
-      const seconds = Math.round(totalMs / 1000);
-      const pct = dur ? Math.min(100, Math.round((totalMs / 1000 / dur) * 100)) : 0;
-      (window as any).umami?.track?.('audio-end', { work, clip, title, seconds, pct, reason });
-    }
-    window.addEventListener('pagehide', () => fireDuration('leave'));
-
-    playBtn.addEventListener('click', () => {
-      const a = ensureAudio();
-      if (a.paused) {
-        a.play().then(() => {
-          player.classList.add('playing');
-          if (!trackedPlay) {
-            trackedPlay = true;
-            (window as any).umami?.track?.('audio-play', { work, clip, title });
-          }
-          markPlay();
-          tick();
-        }).catch(() => {});
-      } else {
-        a.pause();
-        player.classList.remove('playing');
-        if (raf) cancelAnimationFrame(raf);
-      }
-    });
-
-    track.addEventListener('click', (e) => {
-      const a = ensureAudio();
-      const rect = track.getBoundingClientRect();
-      const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-      if (a.duration) {
-        a.currentTime = pct * a.duration;
-        filled.style.width = `${pct * 100}%`;
-        timeEl.textContent = `${fmt(a.currentTime)} / ${fmt(a.duration)}`;
-      }
-    });
+        return b;
+      });
+    paintAll();
   });
 </script>

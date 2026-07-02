@@ -6,6 +6,7 @@
     "dev": "astro dev",
     "build": "astro build",
     "optimize-images": "node scripts/optimize-images.mjs",
+    "generate-peaks": "node scripts/generate-audio-peaks.mjs",
     "preview": "astro preview"
   },
   "dependencies": {

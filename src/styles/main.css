@@ -288,10 +288,12 @@ hr {
   width: 100%; height: 100%;
   object-fit: cover;
   opacity: 0;
-  transition: opacity 0.8s ease;
+  /* Settles 6px into place as it fades in — the same gesture as the /log hover previews. */
+  transform: translateY(6px);
+  transition: opacity 0.8s ease, transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 .work-card.video-active .work-card-media video,
-.work-card.playing .work-card-media video { opacity: 1; }
+.work-card.playing .work-card-media video { opacity: 1; transform: translateY(0); }
 
 .work-card-sound-toggle {
   position: absolute; bottom: 12px; right: 12px;
@@ -1787,4 +1789,113 @@ video.browser-shot { aspect-ratio: 336 / 185; }
   .log-detail-title { font-size: 1.6rem; }
   .log-detail-body figure { margin: 1.75rem auto; }
   .log-hero img { max-height: 62vh; }
+}
+
+/* -- Mini player -- */
+/* A small square, bottom right, that carries the playing piece when its inline player
+   isn't on screen (scrolled away, or on another page — audio survives navigation).
+   Ink only: a 1px black line around the box (same weight as the site's other lines),
+   ✕ to dismiss top right, play/pause centered, the title (a link back to the piece's
+   page) left-aligned above the bar waveform, duration in the bottom-right corner. */
+.mini-player {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 150;
+  width: 11rem;
+  aspect-ratio: 1 / 1;
+  padding: 0.85rem 0.95rem;
+  background: var(--color-bg);
+  border: 1px solid var(--color-rule);
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transform: translateY(6px);
+  pointer-events: none;
+  transition: opacity 0.35s ease, transform 0.45s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.mini-player.is-shown { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.mini-player-close {
+  position: absolute;
+  top: 0.3rem;
+  right: 0.45rem;
+  background: none;
+  border: none;
+  padding: 0.25rem;
+  cursor: pointer;
+  font-size: 0.7rem;
+  line-height: 1;
+  color: #000;
+  transition: opacity 0.15s ease;
+}
+.mini-player-close:hover { opacity: 0.6; }
+.mini-player-toggle {
+  margin: auto;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+  padding: 0;
+  transition: border-color 0.15s ease;
+}
+.mini-player-toggle:hover { border-color: rgba(0, 0, 0, 0.4); }
+.mini-player .icon-pause { display: none; }
+.mini-player.is-playing .icon-play { display: none; }
+.mini-player.is-playing .icon-pause { display: block; }
+.mini-player-wave {
+  display: block;
+  width: 100%;
+  height: 30px;
+  cursor: pointer;
+  margin-top: 0.9rem;   /* top of the box, clearing the ✕ */
+}
+.mpw-axis { stroke: var(--color-rule); stroke-width: 1; vector-effect: non-scaling-stroke; }
+/* 1px screen-width bars, the axis line's exact weight (56 bars over ~150px ≈ 1.6px
+   gaps). Gray fills to black as the piece plays — the one sanctioned gray. */
+.mpw-bars { fill: none; stroke: rgba(0, 0, 0, 0.28); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.mpw-fill { fill: none; stroke: var(--color-rule); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.mini-player-foot {
+  /* Bottom row; the toggle's auto margins center it in the space between the
+     top-right waveform and this row. */
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+.mini-player-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.78rem;
+  line-height: 1.3;
+  color: var(--color-title);
+  text-align: left;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mini-player-time {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: #000;
+  letter-spacing: 0.03em;
+  font-variant-numeric: tabular-nums;
+  text-align: right; /* duration keeps the bottom-right corner */
+}
+@media (max-width: 768px) {
+  .mini-player { right: 12px; bottom: 12px; width: 10rem; }
+}
+
+/* View transitions honor reduced motion: no cross-fade. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-image-pair(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) { animation: none !important; }
 }

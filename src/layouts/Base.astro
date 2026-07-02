@@ -1,5 +1,6 @@
 ---
 import Nav from '../components/Nav.astro';
+import { ClientRouter } from 'astro:transitions';
 import '../styles/main.css';
 
 interface Props {
@@ -47,7 +48,11 @@ const navLinks = [
   <title>{fullTitle}</title>
   <meta name="description" content={metaDesc} />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'unsafe-inline' https://cloud.umami.is; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' blob:; frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://bandcamp.com https://*.bandcamp.com; connect-src 'self' https://cloud.umami.is https://gateway.umami.is" />
+  {/* Client-side navigation + view transitions: pages swap without a full load, which is
+      also what lets audio (audio-manager.ts) keep playing across navigation. Every script
+      that binds to per-page DOM re-initializes on astro:page-load. */}
+  <ClientRouter />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'unsafe-inline' data: https://cloud.umami.is; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' blob:; frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://bandcamp.com https://*.bandcamp.com; connect-src 'self' https://cloud.umami.is https://gateway.umami.is" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -121,17 +126,157 @@ const navLinks = [
     </main>
   </div>
 
+  <!-- Mini player — a small square, bottom right, that carries the playing piece when
+       its inline player isn't on screen (scrolled away, or on another page entirely).
+       Re-rendered per page like everything else; the audio itself lives in
+       audio-manager.ts and keeps playing while pages swap. -->
+  <div class="mini-player" id="mini-player" aria-hidden="true">
+    <button class="mini-player-close" type="button" aria-label="Dismiss player">✕</button>
+    <svg class="mini-player-wave" viewBox="0 0 200 32" preserveAspectRatio="none" aria-hidden="true">
+      <line class="mpw-axis" x1="0" y1="16" x2="200" y2="16" />
+      <path class="mpw-bars" d="" />
+      <g class="mpw-clip" style="clip-path: inset(0 100% 0 0)"><path class="mpw-fill" d="" /></g>
+    </svg>
+    <button class="mini-player-toggle" type="button" aria-label="Pause">
+      <svg class="icon-play" width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+        <polygon points="6 3 20 12 6 21 6 3" />
+      </svg>
+      <svg class="icon-pause" width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+        <rect x="6" y="4" width="4" height="16" />
+        <rect x="14" y="4" width="4" height="16" />
+      </svg>
+    </button>
+    <div class="mini-player-foot">
+      <a class="mini-player-title" href="/"></a>
+      <span class="mini-player-time">0:00</span>
+    </div>
+  </div>
+
+  <script>
+    import { nbAudio } from '../scripts/audio-manager';
+
+    // Mini-player binding. The square's DOM is replaced on every navigation, so elements
+    // are re-queried and re-wired on astro:page-load; the single nb:audio subscription
+    // below lives at module scope and always paints the current elements.
+    const fmt = (s: number) => {
+      if (!isFinite(s) || s <= 0) return '0:00';
+      return `${Math.floor(s / 60)}:${Math.floor(s % 60).toString().padStart(2, '0')}`;
+    };
+
+    let mp: {
+      root: HTMLElement; title: HTMLAnchorElement; toggle: HTMLButtonElement;
+      close: HTMLButtonElement; wave: SVGSVGElement;
+      bars: SVGPathElement; fill: SVGPathElement; clipG: SVGGElement;
+      time: HTMLElement;
+    } | null = null;
+    let srcIO: IntersectionObserver | null = null;
+    let srcVisible = false;
+
+    // The inline player currently bound to the playing track, if it's on this page.
+    function currentInlinePlayer(): HTMLElement | null {
+      if (!nbAudio.meta) return null;
+      return Array.from(document.querySelectorAll<HTMLElement>('.audio-player'))
+        .find((p) => p.dataset.src === nbAudio.meta!.src) || null;
+    }
+
+    // Watch whether that inline player is on screen — the square only appears when the
+    // piece is playing somewhere you can't see its controls.
+    function watchSource() {
+      srcIO?.disconnect();
+      srcIO = null;
+      srcVisible = false;
+      const el = currentInlinePlayer();
+      if (!el) { paint(); return; }
+      srcIO = new IntersectionObserver((entries) => {
+        entries.forEach((e) => { srcVisible = e.isIntersecting; });
+        paint();
+      }, { threshold: 0.35 });
+      srcIO.observe(el);
+    }
+
+    function paint() {
+      if (!mp) return;
+      const a = nbAudio.el;
+      const show = !!(nbAudio.meta && nbAudio.started && !nbAudio.ended && !srcVisible);
+      mp.root.classList.toggle('is-shown', show);
+      mp.root.setAttribute('aria-hidden', String(!show));
+      if (!show || !a) return;
+      const meta = nbAudio.meta!;
+      mp.title.textContent = meta.title;
+      mp.title.href = meta.href || '/';
+      const d = meta.waveMini || '';
+      if (mp.bars.getAttribute('d') !== d) {
+        mp.bars.setAttribute('d', d);
+        mp.fill.setAttribute('d', d);
+      }
+      mp.root.classList.toggle('is-playing', nbAudio.playing);
+      mp.toggle.setAttribute('aria-label', nbAudio.playing ? 'Pause' : 'Play');
+      const dur = a.duration || 0;
+      const pct = dur ? (a.currentTime / dur) * 100 : 0;
+      mp.clipG.style.clipPath = `inset(0 ${100 - pct}% 0 0)`;
+      mp.time.textContent = fmt(dur);
+    }
+
+    document.addEventListener('nb:audio', () => {
+      // A new track may have started: re-resolve which inline player to watch.
+      if (nbAudio.meta && mp && mp.root.dataset.watching !== nbAudio.meta.src) {
+        mp.root.dataset.watching = nbAudio.meta.src;
+        watchSource();
+      }
+      paint();
+    });
+
+    document.addEventListener('astro:page-load', () => {
+      const root = document.getElementById('mini-player');
+      if (!root) { mp = null; return; }
+      mp = {
+        root,
+        title: root.querySelector('.mini-player-title') as HTMLAnchorElement,
+        toggle: root.querySelector('.mini-player-toggle') as HTMLButtonElement,
+        close: root.querySelector('.mini-player-close') as HTMLButtonElement,
+        wave: root.querySelector('.mini-player-wave') as SVGSVGElement,
+        bars: root.querySelector('.mpw-bars') as SVGPathElement,
+        fill: root.querySelector('.mpw-fill') as SVGPathElement,
+        clipG: root.querySelector('.mpw-clip') as SVGGElement,
+        time: root.querySelector('.mini-player-time') as HTMLElement,
+      };
+      if (nbAudio.meta) mp.root.dataset.watching = nbAudio.meta.src;
+      mp.toggle.addEventListener('click', () => nbAudio.toggle());
+      mp.close.addEventListener('click', () => nbAudio.stop());
+      mp.wave.addEventListener('click', (e) => {
+        const r = mp!.wave.getBoundingClientRect();
+        nbAudio.seekPct((e.clientX - r.left) / r.width);
+      });
+      watchSource();
+      paint();
+    });
+  </script>
+
   <script>
     // Horizontal gallery. The pan itself is a CSS scroll-driven animation (see main.css,
     // @supports animation-timeline) that runs on the compositor; non-supporting browsers
     // and mobile fall back to native horizontal scroll. JS only (a) sets --gallery-overflow
     // so the pinned wrapper's vertical scroll distance equals the horizontal travel, and
     // (b) updates the image counter.
-    const wrap = document.querySelector<HTMLElement>('.work-scroll-wrap');
-    const track = document.querySelector<HTMLElement>('.work-scroll-track');
-    const gallery = document.querySelector<HTMLElement>('.work-scroll-gallery');
+    // Re-initialized on every client-side navigation: the elements are new after each
+    // swap; the previous page's window listeners and observer tear down via the
+    // AbortController/disconnect below.
+    let galleryCtrl: AbortController | null = null;
+    let galleryRO: ResizeObserver | null = null;
 
-    if (wrap && track && gallery) {
+    function initGallery() {
+      galleryCtrl?.abort();
+      galleryRO?.disconnect();
+      galleryCtrl = null;
+      galleryRO = null;
+
+      const wrap = document.querySelector<HTMLElement>('.work-scroll-wrap');
+      const track = document.querySelector<HTMLElement>('.work-scroll-track');
+      const gallery = document.querySelector<HTMLElement>('.work-scroll-gallery');
+      if (!(wrap && track && gallery)) return;
+
+      galleryCtrl = new AbortController();
+      const { signal } = galleryCtrl;
       const imgs = [...track.querySelectorAll('img')];
       const counter = document.querySelector('.gallery-counter') as HTMLElement | null;
 
@@ -154,11 +299,11 @@ const navLinks = [
         counter.textContent = `${current} / ${imgs.length}`;
       };
 
-      const ro = new ResizeObserver(() => { measure(); updateCounter(); });
-      ro.observe(gallery);
-      ro.observe(track);
+      galleryRO = new ResizeObserver(() => { measure(); updateCounter(); });
+      galleryRO.observe(gallery);
+      galleryRO.observe(track);
       imgs.forEach((img) => {
-        if (!img.complete) img.addEventListener('load', () => { measure(); updateCounter(); }, { once: true });
+        if (!img.complete) img.addEventListener('load', () => { measure(); updateCounter(); }, { once: true, signal });
       });
 
       let ticking = false;
@@ -167,12 +312,13 @@ const navLinks = [
         ticking = true;
         requestAnimationFrame(() => { updateCounter(); ticking = false; });
       };
-      window.addEventListener('scroll', onScroll, { passive: true });   // pinned mode: page scroll pans the track
-      gallery.addEventListener('scroll', onScroll, { passive: true });  // native mode: gallery scrolls horizontally
+      window.addEventListener('scroll', onScroll, { passive: true, signal });   // pinned mode: page scroll pans the track
+      gallery.addEventListener('scroll', onScroll, { passive: true, signal });  // native mode: gallery scrolls horizontally
 
       measure();
       updateCounter();
     }
+    document.addEventListener('astro:page-load', initGallery);
   </script>
   <script>
     // Umami: track outbound link and mailto clicks
@@ -198,13 +344,44 @@ const navLinks = [
     }, { capture: true });
   </script>
   <script>
-    // Animated favicon: line ↔ squiggle
-    const faviconLink = document.getElementById('favicon') as HTMLLinkElement;
-    if (faviconLink) {
-      let prevUrl: string | null = null;
-      const update = () => {
-        const t = Date.now();
+    // Animated favicon: line ↔ squiggle. Idle, it breathes through sine / triangle /
+    // square on a slow 10s clock; while site audio plays (audio-manager.ts) the same
+    // line becomes the LIVE waveform from the analyser tap — the tab icon hears the
+    // piece — and relaxes back to the idle cycle when the sound stops.
+    // The <link> is re-queried every tick: head merging during client-side navigation
+    // can replace the element, which would strand a cached reference.
+    let prevUrl: string | null = null;
+    let liveBuf: Uint8Array | null = null;
+    const update = () => {
+      const faviconLink = document.getElementById('favicon') as HTMLLinkElement | null;
+      if (!faviconLink) return;
+      const t = Date.now();
+      let d = 'M 3,16';
 
+      const api = (window as any).__nbAudio;
+      const analyser = api?.playing ? api.analyser : null;
+      if (analyser) {
+        // Live mode: five frequency-band bars bouncing with the sound (level meter,
+        // Apple-Music style) — far more legible at 16×16 than a waveform trace.
+        if (!liveBuf || liveBuf.length !== analyser.frequencyBinCount) liveBuf = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(liveBuf);
+        const bands = [[0, 4], [4, 10], [10, 24], [24, 52], [52, 110]];
+        let rects = '';
+        bands.forEach(([a0, a1], i) => {
+          let sum = 0;
+          for (let k = a0; k < a1; k++) sum += liveBuf![k];
+          const v = Math.min(1, sum / (a1 - a0) / 190);
+          const h = 4 + Math.pow(v, 1.2) * 25;
+          rects += `<rect x="${(4.1 + i * 5.2).toFixed(1)}" y="${(16 - h / 2).toFixed(1)}" width="3.2" height="${h.toFixed(1)}" rx="1.6" fill="#111"/>`;
+        });
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">${rects}</svg>`;
+        if (prevUrl) URL.revokeObjectURL(prevUrl);
+        const blob = new Blob([svg], { type: 'image/svg+xml' });
+        prevUrl = URL.createObjectURL(blob);
+        faviconLink.href = prevUrl;
+        return;
+      } else {
+        // Idle mode: the original breathing cycle.
         // Waveform functions: sine, triangle, square
         const wave = [
           (p: number) => Math.sin(p),
@@ -221,25 +398,24 @@ const navLinks = [
         const half = phase < 0.5 ? phase * 2 : 2 - phase * 2;
         const ease = half * half * (3 - 2 * half);
         const amp = 0.3 + ease * 3.7;
-        let d = 'M 3,16';
         for (let i = 1; i <= 20; i++) {
           const x = 3 + i * 1.3;
           const y = 16 + fn(i * 0.9 + t / 400) * amp;
           d += ` L ${x.toFixed(1)},${y.toFixed(1)}`;
         }
+      }
 
-        const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-          <path d="${d}" stroke="#111" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-        </svg>`;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+        <path d="${d}" stroke="#111" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      </svg>`;
 
-        if (prevUrl) URL.revokeObjectURL(prevUrl);
-        const blob = new Blob([svg], { type: 'image/svg+xml' });
-        prevUrl = URL.createObjectURL(blob);
-        faviconLink.href = prevUrl;
-      };
-      setInterval(update, 250);
-      update();
-    }
+      if (prevUrl) URL.revokeObjectURL(prevUrl);
+      const blob = new Blob([svg], { type: 'image/svg+xml' });
+      prevUrl = URL.createObjectURL(blob);
+      faviconLink.href = prevUrl;
+    };
+    setInterval(update, 150);
+    update();
   </script>
 </body>
 </html>
