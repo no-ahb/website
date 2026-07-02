@@ -144,8 +144,8 @@ const navLinks = [
     <a class="mini-player-title" href="/"></a>
     <svg class="mini-player-wave" viewBox="0 0 200 32" preserveAspectRatio="none" aria-hidden="true">
       <line class="mpw-axis" x1="0" y1="16" x2="200" y2="16" />
-      <path class="mpw-bg" d="" />
-      <g class="mpw-clip" style="clip-path: inset(0 100% 0 0)"><path class="mpw-fg" d="" /></g>
+      <path class="mpw-bars" d="" />
+      <line class="mpw-head" x1="0" y1="1" x2="0" y2="31" />
     </svg>
     <span class="mini-player-time">0:00</span>
   </div>
@@ -164,7 +164,7 @@ const navLinks = [
     let mp: {
       root: HTMLElement; title: HTMLAnchorElement; toggle: HTMLButtonElement;
       close: HTMLButtonElement; wave: SVGSVGElement;
-      bgPath: SVGPathElement; fgPath: SVGPathElement; clipG: SVGGElement;
+      bars: SVGPathElement; head: SVGLineElement;
       time: HTMLElement;
     } | null = null;
     let srcIO: IntersectionObserver | null = null;
@@ -203,15 +203,13 @@ const navLinks = [
       mp.title.textContent = meta.title;
       mp.title.href = meta.href || '/';
       const d = meta.waveMini || '';
-      if (mp.bgPath.getAttribute('d') !== d) {
-        mp.bgPath.setAttribute('d', d);
-        mp.fgPath.setAttribute('d', d);
-      }
+      if (mp.bars.getAttribute('d') !== d) mp.bars.setAttribute('d', d);
       mp.root.classList.toggle('is-playing', nbAudio.playing);
       mp.toggle.setAttribute('aria-label', nbAudio.playing ? 'Pause' : 'Play');
       const dur = a.duration || 0;
-      const pct = dur ? (a.currentTime / dur) * 100 : 0;
-      mp.clipG.style.clipPath = `inset(0 ${100 - pct}% 0 0)`;
+      const x = (dur ? (a.currentTime / dur) * 200 : 0).toFixed(2);
+      mp.head.setAttribute('x1', x);
+      mp.head.setAttribute('x2', x);
       mp.time.textContent = fmt(dur);
     }
 
@@ -233,9 +231,8 @@ const navLinks = [
         toggle: root.querySelector('.mini-player-toggle') as HTMLButtonElement,
         close: root.querySelector('.mini-player-close') as HTMLButtonElement,
         wave: root.querySelector('.mini-player-wave') as SVGSVGElement,
-        bgPath: root.querySelector('.mpw-bg') as SVGPathElement,
-        fgPath: root.querySelector('.mpw-fg') as SVGPathElement,
-        clipG: root.querySelector('.mpw-clip') as SVGGElement,
+        bars: root.querySelector('.mpw-bars') as SVGPathElement,
+        head: root.querySelector('.mpw-head') as SVGLineElement,
         time: root.querySelector('.mini-player-time') as HTMLElement,
       };
       if (nbAudio.meta) mp.root.dataset.watching = nbAudio.meta.src;

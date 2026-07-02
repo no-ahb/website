@@ -15,29 +15,30 @@ import peaksMap from '../data/audio-peaks.json';
 const { src, title, work, clip } = Astro.props;
 
 // Waveform seekbar: pre-rendered peaks (scripts/generate-audio-peaks.mjs →
-// src/data/audio-peaks.json) drawn as little vertical 1px lines of varying height,
-// mirrored around a horizontal hairline axis — the site's vertical/horizontal ink
-// language. The bars draw in left-to-right when the piece starts playing, and the
-// played portion renders full ink via a clip that tracks playback. Files without
-// peaks fall back to the plain hairline.
+// src/data/audio-peaks.json) drawn as vertical black lines of varying height, packed
+// with no gaps (each bar's stroke width equals its slot, in viewBox units, so they
+// stay flush at any rendered size), mirrored around a horizontal hairline axis. The
+// waveform is always visible; playback position is a thin red playhead. Files
+// without peaks fall back to the plain hairline.
 const peaks: number[] | undefined = (peaksMap as Record<string, number[]>)[src];
-// `count` evenly-sampled bars across the 0–200 viewBox, one M/V segment each, so all
-// bars live in a single stroked path.
+// `count` bars across the 0–200 viewBox, one M/V segment each, all in a single
+// stroked path; pair with stroke-width = 200/count so adjacent bars touch exactly.
 const barsPath = (pk: number[], count: number): string => {
   const step = 200 / count;
   let d = '';
   for (let i = 0; i < count; i++) {
     const p = pk[Math.min(pk.length - 1, Math.round((i / (count - 1)) * (pk.length - 1)))];
     const h = Math.max(0.8, p * 14);
-    const x = (i * step + step / 2).toFixed(1);
+    const x = (i * step + step / 2).toFixed(2);
     d += `M${x},${(16 - h).toFixed(1)}V${(16 + h).toFixed(1)}`;
   }
   return d;
 };
 const hasWave = !!(peaks && peaks.length > 1);
-const waveD = hasWave ? barsPath(peaks!, 110) : '';
-// A sparser set for the mini-player's much narrower box (read from the data attribute).
-const waveMiniD = hasWave ? barsPath(peaks!, 42) : '';
+const waveD = hasWave ? barsPath(peaks!, 200) : '';
+// A chunkier bar set for the mini-player's much narrower box (read from the data
+// attribute; its stroke-width lives in the .mpw-bars rule and must match 200/56).
+const waveMiniD = hasWave ? barsPath(peaks!, 56) : '';
 
 function fmtDuration(secs: number): string {
   if (!isFinite(secs) || secs <= 0) return '0:00';
@@ -71,12 +72,8 @@ try {
     {waveD ? (
       <svg class="ap-wave" viewBox="0 0 200 32" preserveAspectRatio="none" aria-hidden="true">
         <line class="ap-wave-axis" x1="0" y1="16" x2="200" y2="16" />
-        <g class="ap-wave-draw">
-          <path class="ap-wave-bg" d={waveD} />
-          <g class="ap-wave-clip" style="clip-path: inset(0 100% 0 0)">
-            <path class="ap-wave-fg" d={waveD} />
-          </g>
-        </g>
+        <path class="ap-wave-bars" d={waveD} />
+        <line class="ap-wave-head" x1="0" y1="1" x2="0" y2="31" />
       </svg>
     ) : (
       <div class="audio-player-progress">
@@ -149,38 +146,32 @@ try {
     height: 2px;
   }
 
-  /* Waveform seekbar — vertical 1px bars around a horizontal hairline axis. The bars
-     stay hidden behind the axis until the piece plays (.is-drawn draws them in
-     left-to-right); the played portion is the same bars in full ink, revealed by the
-     progress clip. */
+  /* Waveform seekbar — packed vertical black lines around a black hairline axis,
+     always visible. Playback position is the thin red playhead ("color only where
+     something is happening"). Bar stroke-width is in viewBox units (200/count) so
+     the bars stay flush at any rendered size. */
   .ap-wave {
     display: block;
     width: 100%;
     height: 30px;
   }
   .ap-wave-axis {
-    stroke: rgba(0, 0, 0, 0.25);
+    stroke: var(--color-rule);
     stroke-width: 1;
     vector-effect: non-scaling-stroke;
   }
-  .ap-wave-bg {
+  .ap-wave-bars {
     fill: none;
-    stroke: rgba(0, 0, 0, 0.22);
+    stroke: var(--color-rule);
+    stroke-width: 1; /* = 200 / 200 bars */
+  }
+  .ap-wave-head {
+    stroke: var(--color-accent-works);
     stroke-width: 1;
     vector-effect: non-scaling-stroke;
+    opacity: 0;
+    transition: opacity 0.2s ease;
   }
-  .ap-wave-fg {
-    fill: none;
-    stroke: rgba(0, 0, 0, 0.8);
-    stroke-width: 1;
-    vector-effect: non-scaling-stroke;
-  }
-  .ap-wave-draw {
-    clip-path: inset(0 100% 0 0);
-    transition: clip-path 0.9s ease;
-  }
-  .audio-player.is-drawn .ap-wave-draw { clip-path: inset(0 0 0 0); }
-  .ap-wave-clip { transition: clip-path 0.1s linear; }
 
   .audio-player-time {
     flex-shrink: 0;
@@ -203,7 +194,7 @@ try {
     playBtn: HTMLButtonElement;
     track: HTMLElement;
     filled: HTMLElement | null;
-    clip: HTMLElement | null;
+    head: SVGLineElement | null;
     timeEl: HTMLElement;
     preDur: string;
     meta: { src: string; title: string; work: string; clip?: string };
@@ -223,14 +214,17 @@ try {
     const a = nbAudio.el;
     const cur = isCurrent(b) && !!a;
     b.root.classList.toggle('playing', cur && nbAudio.playing);
-    // The bars draw in when this player's piece starts, and retract if another takes over.
-    if (cur && nbAudio.started) b.root.classList.add('is-drawn');
-    else if (!cur) b.root.classList.remove('is-drawn');
     const dur = cur ? a!.duration || 0 : 0;
     const t = cur ? a!.currentTime || 0 : 0;
     const pct = dur ? (t / dur) * 100 : 0;
     if (b.filled) b.filled.style.width = `${pct}%`;
-    if (b.clip) b.clip.style.clipPath = `inset(0 ${100 - pct}% 0 0)`;
+    if (b.head) {
+      // The red playhead only exists on the piece that owns playback.
+      b.head.style.opacity = cur && nbAudio.started ? '1' : '0';
+      const x = ((pct / 100) * 200).toFixed(2);
+      b.head.setAttribute('x1', x);
+      b.head.setAttribute('x2', x);
+    }
     b.timeEl.textContent = cur && dur ? `${fmt(t)} / ${fmt(dur)}` : `0:00 / ${b.preDur}`;
   }
 
@@ -258,7 +252,7 @@ try {
           playBtn: player.querySelector('.audio-player-play') as HTMLButtonElement,
           track: player.querySelector('.audio-player-track') as HTMLElement,
           filled: player.querySelector('.audio-player-filled'),
-          clip: player.querySelector('.ap-wave-clip'),
+          head: player.querySelector('.ap-wave-head'),
           timeEl: player.querySelector('.audio-player-time') as HTMLElement,
           preDur: player.dataset.duration || '0:00',
           meta: {

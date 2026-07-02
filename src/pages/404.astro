@@ -17,9 +17,13 @@ import Base from '../layouts/Base.astro';
   </div>
 
   <style>
+    /* The whole block sits at the vertical middle of the viewport. */
     .notfound-page {
-      min-height: 60vh;
-      padding-top: 22vh;
+      min-height: calc(100vh - 6rem);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
       text-align: center;
     }
     .notfound-text {
@@ -31,16 +35,17 @@ import Base from '../layouts/Base.astro';
       letter-spacing: 0.08em;
     }
     /* Tall canvas with negative margins: the resting line sits between the two texts,
-       but a hard ripple has ~130px of headroom either way and rides OVER the words
-       (z-index above, pointer-events off so the link stays clickable). */
+       and a hard ripple has ~200px of headroom either way (the physics also clamps
+       displacement to the canvas), so it rides OVER the words instead of clipping.
+       z-index above the text, pointer-events off so the link stays clickable. */
     .notfound-wave {
       position: relative;
       z-index: 2;
       pointer-events: none;
       display: block;
       width: 100%;
-      height: 320px;
-      margin: -128px auto;
+      height: 480px;
+      margin: -208px auto;
     }
   </style>
 
@@ -95,8 +100,13 @@ import Base from '../layouts/Base.astro';
           vel[i] += (left + right - 2 * pos[i]) * spread - pos[i] * spring;
           vel[i] *= damp;
         }
+        // Keep the wildest swings inside the canvas — displacement is clamped a few
+        // pixels shy of the edge so the line never renders cut off.
+        const maxAmp = canvas.height / DPR / 2 - 4;
         for (let i = 0; i < N; i++) {
           pos[i] += vel[i];
+          if (pos[i] > maxAmp) { pos[i] = maxAmp; vel[i] *= 0.5; }
+          else if (pos[i] < -maxAmp) { pos[i] = -maxAmp; vel[i] *= 0.5; }
           energy += Math.abs(pos[i]) + Math.abs(vel[i]);
         }
         draw();

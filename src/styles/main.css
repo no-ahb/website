@@ -1825,27 +1825,27 @@ video.browser-shot { aspect-ratio: 336 / 185; }
   cursor: pointer;
   font-size: 0.7rem;
   line-height: 1;
-  color: var(--color-meta);
-  transition: color 0.15s ease;
+  color: #000;
+  transition: opacity 0.15s ease;
 }
-.mini-player-close:hover { color: #000; }
+.mini-player-close:hover { opacity: 0.6; }
 .mini-player-toggle {
   margin: 0.75rem auto 0;
   flex-shrink: 0;
   width: 30px;
   height: 30px;
-  border: 1px solid rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--color-rule);
   border-radius: 50%;
   background: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(0, 0, 0, 0.75);
+  color: #000;
   padding: 0;
-  transition: border-color 0.15s ease, color 0.15s ease;
+  transition: opacity 0.15s ease;
 }
-.mini-player-toggle:hover { border-color: rgba(0, 0, 0, 0.4); color: rgba(0, 0, 0, 0.9); }
+.mini-player-toggle:hover { opacity: 0.6; }
 .mini-player .icon-pause { display: none; }
 .mini-player.is-playing .icon-play { display: none; }
 .mini-player.is-playing .icon-pause { display: block; }
@@ -1867,14 +1867,13 @@ video.browser-shot { aspect-ratio: 336 / 185; }
   height: 30px;
   cursor: pointer;
 }
-.mpw-axis { stroke: rgba(0, 0, 0, 0.25); stroke-width: 1; vector-effect: non-scaling-stroke; }
-.mpw-bg { fill: none; stroke: rgba(0, 0, 0, 0.22); stroke-width: 1; vector-effect: non-scaling-stroke; }
-.mpw-fg { fill: none; stroke: rgba(0, 0, 0, 0.8); stroke-width: 1; vector-effect: non-scaling-stroke; }
-.mpw-clip { transition: clip-path 0.1s linear; }
+.mpw-axis { stroke: var(--color-rule); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.mpw-bars { fill: none; stroke: var(--color-rule); stroke-width: 3.57; } /* = 200 / 56 bars, so they pack flush */
+.mpw-head { stroke: var(--color-accent-works); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .mini-player-time {
   margin-top: 0.3rem;
   font-size: 11px;
-  color: var(--color-meta);
+  color: #000;
   letter-spacing: 0.03em;
   font-variant-numeric: tabular-nums;
   text-align: right; /* duration in the square's bottom-right corner */
