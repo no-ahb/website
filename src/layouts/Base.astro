@@ -131,7 +131,7 @@ const navLinks = [
        Re-rendered per page like everything else; the audio itself lives in
        audio-manager.ts and keeps playing while pages swap. -->
   <div class="mini-player" id="mini-player" aria-hidden="true">
-    <p class="mini-player-title"></p>
+    <button class="mini-player-close" type="button" aria-label="Dismiss player">✕</button>
     <button class="mini-player-toggle" type="button" aria-label="Pause">
       <svg class="icon-play" width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
         <polygon points="6 3 20 12 6 21 6 3" />
@@ -141,10 +141,13 @@ const navLinks = [
         <rect x="14" y="4" width="4" height="16" />
       </svg>
     </button>
-    <div class="mini-player-foot">
-      <div class="mini-player-line"><div class="mini-player-fill"></div></div>
-      <span class="mini-player-time">0:00</span>
-    </div>
+    <a class="mini-player-title" href="/"></a>
+    <svg class="mini-player-wave" viewBox="0 0 200 32" preserveAspectRatio="none" aria-hidden="true">
+      <line class="mpw-axis" x1="0" y1="16" x2="200" y2="16" />
+      <path class="mpw-bg" d="" />
+      <g class="mpw-clip" style="clip-path: inset(0 100% 0 0)"><path class="mpw-fg" d="" /></g>
+    </svg>
+    <span class="mini-player-time">0:00</span>
   </div>
 
   <script>
@@ -159,8 +162,10 @@ const navLinks = [
     };
 
     let mp: {
-      root: HTMLElement; title: HTMLElement; toggle: HTMLButtonElement;
-      line: HTMLElement; fill: HTMLElement; time: HTMLElement;
+      root: HTMLElement; title: HTMLAnchorElement; toggle: HTMLButtonElement;
+      close: HTMLButtonElement; wave: SVGSVGElement;
+      bgPath: SVGPathElement; fgPath: SVGPathElement; clipG: SVGGElement;
+      time: HTMLElement;
     } | null = null;
     let srcIO: IntersectionObserver | null = null;
     let srcVisible = false;
@@ -194,11 +199,19 @@ const navLinks = [
       mp.root.classList.toggle('is-shown', show);
       mp.root.setAttribute('aria-hidden', String(!show));
       if (!show || !a) return;
-      mp.title.textContent = nbAudio.meta!.title;
+      const meta = nbAudio.meta!;
+      mp.title.textContent = meta.title;
+      mp.title.href = meta.href || '/';
+      const d = meta.waveMini || '';
+      if (mp.bgPath.getAttribute('d') !== d) {
+        mp.bgPath.setAttribute('d', d);
+        mp.fgPath.setAttribute('d', d);
+      }
       mp.root.classList.toggle('is-playing', nbAudio.playing);
       mp.toggle.setAttribute('aria-label', nbAudio.playing ? 'Pause' : 'Play');
       const dur = a.duration || 0;
-      mp.fill.style.width = dur ? `${(a.currentTime / dur) * 100}%` : '0%';
+      const pct = dur ? (a.currentTime / dur) * 100 : 0;
+      mp.clipG.style.clipPath = `inset(0 ${100 - pct}% 0 0)`;
       mp.time.textContent = fmt(dur);
     }
 
@@ -216,16 +229,20 @@ const navLinks = [
       if (!root) { mp = null; return; }
       mp = {
         root,
-        title: root.querySelector('.mini-player-title') as HTMLElement,
+        title: root.querySelector('.mini-player-title') as HTMLAnchorElement,
         toggle: root.querySelector('.mini-player-toggle') as HTMLButtonElement,
-        line: root.querySelector('.mini-player-line') as HTMLElement,
-        fill: root.querySelector('.mini-player-fill') as HTMLElement,
+        close: root.querySelector('.mini-player-close') as HTMLButtonElement,
+        wave: root.querySelector('.mini-player-wave') as SVGSVGElement,
+        bgPath: root.querySelector('.mpw-bg') as SVGPathElement,
+        fgPath: root.querySelector('.mpw-fg') as SVGPathElement,
+        clipG: root.querySelector('.mpw-clip') as SVGGElement,
         time: root.querySelector('.mini-player-time') as HTMLElement,
       };
       if (nbAudio.meta) mp.root.dataset.watching = nbAudio.meta.src;
       mp.toggle.addEventListener('click', () => nbAudio.toggle());
-      mp.line.addEventListener('click', (e) => {
-        const r = mp!.line.getBoundingClientRect();
+      mp.close.addEventListener('click', () => nbAudio.stop());
+      mp.wave.addEventListener('click', (e) => {
+        const r = mp!.wave.getBoundingClientRect();
         nbAudio.seekPct((e.clientX - r.left) / r.width);
       });
       watchSource();
@@ -342,16 +359,25 @@ const navLinks = [
       const api = (window as any).__nbAudio;
       const analyser = api?.playing ? api.analyser : null;
       if (analyser) {
-        // Live mode: 20 samples of the current output waveform.
-        if (!liveBuf || liveBuf.length !== analyser.fftSize) liveBuf = new Uint8Array(analyser.fftSize);
-        analyser.getByteTimeDomainData(liveBuf);
-        const step = Math.floor(liveBuf.length / 20);
-        for (let i = 1; i <= 20; i++) {
-          const v = (liveBuf[Math.min(liveBuf.length - 1, i * step)] - 128) / 128; // −1..1
-          const x = 3 + i * 1.3;
-          const y = 16 + v * 11;
-          d += ` L ${x.toFixed(1)},${y.toFixed(1)}`;
-        }
+        // Live mode: five frequency-band bars bouncing with the sound (level meter,
+        // Apple-Music style) — far more legible at 16×16 than a waveform trace.
+        if (!liveBuf || liveBuf.length !== analyser.frequencyBinCount) liveBuf = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(liveBuf);
+        const bands = [[0, 4], [4, 10], [10, 24], [24, 52], [52, 110]];
+        let rects = '';
+        bands.forEach(([a0, a1], i) => {
+          let sum = 0;
+          for (let k = a0; k < a1; k++) sum += liveBuf![k];
+          const v = Math.min(1, sum / (a1 - a0) / 190);
+          const h = 4 + Math.pow(v, 1.2) * 25;
+          rects += `<rect x="${(4.1 + i * 5.2).toFixed(1)}" y="${(16 - h / 2).toFixed(1)}" width="3.2" height="${h.toFixed(1)}" rx="1.6" fill="#111"/>`;
+        });
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">${rects}</svg>`;
+        if (prevUrl) URL.revokeObjectURL(prevUrl);
+        const blob = new Blob([svg], { type: 'image/svg+xml' });
+        prevUrl = URL.createObjectURL(blob);
+        faviconLink.href = prevUrl;
+        return;
       } else {
         // Idle mode: the original breathing cycle.
         // Waveform functions: sine, triangle, square
@@ -386,7 +412,7 @@ const navLinks = [
       prevUrl = URL.createObjectURL(blob);
       faviconLink.href = prevUrl;
     };
-    setInterval(update, 250);
+    setInterval(update, 150);
     update();
   </script>
 </body>

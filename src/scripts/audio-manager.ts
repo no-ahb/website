@@ -14,6 +14,10 @@ export type TrackMeta = {
   title: string;
   work: string;
   clip?: string;
+  /** Page the piece lives on (where play was pressed) — the mini-player's title links here. */
+  href?: string;
+  /** Sparse bar-waveform path for the mini-player (from the inline player's data attribute). */
+  waveMini?: string;
 };
 
 let audio: HTMLAudioElement | null = null;
@@ -115,6 +119,17 @@ export const nbAudio = {
     } else {
       audio.pause();
     }
+  },
+
+  /** Dismiss: close out analytics, stop playback, and clear the session (hides the mini-player). */
+  stop(reason = 'dismiss') {
+    if (!audio || !meta) return;
+    fireDuration(reason);
+    audio.pause();
+    audio.currentTime = 0;
+    meta = null;
+    started = false;
+    emit();
   },
 
   seekPct(p: number) {

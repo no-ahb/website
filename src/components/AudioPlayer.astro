@@ -14,19 +14,30 @@ import peaksMap from '../data/audio-peaks.json';
 
 const { src, title, work, clip } = Astro.props;
 
-// Waveform seekbar: pre-rendered peak envelope (scripts/generate-audio-peaks.mjs →
-// src/data/audio-peaks.json). The seekbar draws the piece's own contour as a 1px ink
-// outline; the played portion fills solid via a clip that tracks playback. Files
-// without peaks fall back to the plain hairline.
+// Waveform seekbar: pre-rendered peaks (scripts/generate-audio-peaks.mjs →
+// src/data/audio-peaks.json) drawn as little vertical 1px lines of varying height,
+// mirrored around a horizontal hairline axis — the site's vertical/horizontal ink
+// language. The bars draw in left-to-right when the piece starts playing, and the
+// played portion renders full ink via a clip that tracks playback. Files without
+// peaks fall back to the plain hairline.
 const peaks: number[] | undefined = (peaksMap as Record<string, number[]>)[src];
-let waveD = '';
-if (peaks && peaks.length > 1) {
-  const n = peaks.length;
-  const X = (i: number) => +((i / (n - 1)) * 200).toFixed(1);
-  const top = peaks.map((p, i) => `${X(i)},${(16 - p * 14).toFixed(1)}`).join(' L');
-  const bot = peaks.map((p, i) => `${X(i)},${(16 + p * 14).toFixed(1)}`).reverse().join(' L');
-  waveD = `M${top} L${bot} Z`;
-}
+// `count` evenly-sampled bars across the 0–200 viewBox, one M/V segment each, so all
+// bars live in a single stroked path.
+const barsPath = (pk: number[], count: number): string => {
+  const step = 200 / count;
+  let d = '';
+  for (let i = 0; i < count; i++) {
+    const p = pk[Math.min(pk.length - 1, Math.round((i / (count - 1)) * (pk.length - 1)))];
+    const h = Math.max(0.8, p * 14);
+    const x = (i * step + step / 2).toFixed(1);
+    d += `M${x},${(16 - h).toFixed(1)}V${(16 + h).toFixed(1)}`;
+  }
+  return d;
+};
+const hasWave = !!(peaks && peaks.length > 1);
+const waveD = hasWave ? barsPath(peaks!, 110) : '';
+// A sparser set for the mini-player's much narrower box (read from the data attribute).
+const waveMiniD = hasWave ? barsPath(peaks!, 42) : '';
 
 function fmtDuration(secs: number): string {
   if (!isFinite(secs) || secs <= 0) return '0:00';
@@ -45,7 +56,7 @@ try {
 } catch {}
 ---
 
-<div class="audio-player" data-src={asset(src)} data-title={title} data-work={work || title} data-clip={clip} data-duration={preDuration}>
+<div class="audio-player" data-src={asset(src)} data-title={title} data-work={work || title} data-clip={clip} data-duration={preDuration} data-wave-mini={waveMiniD || undefined}>
   <button class="audio-player-play" aria-label="Play">
     <svg class="icon-play" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
       <polygon points="6 3 20 12 6 21 6 3" />
@@ -59,9 +70,12 @@ try {
   <div class="audio-player-track">
     {waveD ? (
       <svg class="ap-wave" viewBox="0 0 200 32" preserveAspectRatio="none" aria-hidden="true">
-        <path class="ap-wave-bg" d={waveD} />
-        <g class="ap-wave-clip" style="clip-path: inset(0 100% 0 0)">
-          <path class="ap-wave-fg" d={waveD} />
+        <line class="ap-wave-axis" x1="0" y1="16" x2="200" y2="16" />
+        <g class="ap-wave-draw">
+          <path class="ap-wave-bg" d={waveD} />
+          <g class="ap-wave-clip" style="clip-path: inset(0 100% 0 0)">
+            <path class="ap-wave-fg" d={waveD} />
+          </g>
         </g>
       </svg>
     ) : (
@@ -135,12 +149,19 @@ try {
     height: 2px;
   }
 
-  /* Waveform seekbar — the piece's envelope as a hairline ink outline; the played
-     portion is the same shape filled, revealed left-to-right by the clip. */
+  /* Waveform seekbar — vertical 1px bars around a horizontal hairline axis. The bars
+     stay hidden behind the axis until the piece plays (.is-drawn draws them in
+     left-to-right); the played portion is the same bars in full ink, revealed by the
+     progress clip. */
   .ap-wave {
     display: block;
     width: 100%;
-    height: 26px;
+    height: 30px;
+  }
+  .ap-wave-axis {
+    stroke: rgba(0, 0, 0, 0.25);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
   }
   .ap-wave-bg {
     fill: none;
@@ -149,9 +170,16 @@ try {
     vector-effect: non-scaling-stroke;
   }
   .ap-wave-fg {
-    fill: rgba(0, 0, 0, 0.68);
-    stroke: none;
+    fill: none;
+    stroke: rgba(0, 0, 0, 0.8);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
   }
+  .ap-wave-draw {
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path 0.9s ease;
+  }
+  .audio-player.is-drawn .ap-wave-draw { clip-path: inset(0 0 0 0); }
   .ap-wave-clip { transition: clip-path 0.1s linear; }
 
   .audio-player-time {
@@ -195,6 +223,9 @@ try {
     const a = nbAudio.el;
     const cur = isCurrent(b) && !!a;
     b.root.classList.toggle('playing', cur && nbAudio.playing);
+    // The bars draw in when this player's piece starts, and retract if another takes over.
+    if (cur && nbAudio.started) b.root.classList.add('is-drawn');
+    else if (!cur) b.root.classList.remove('is-drawn');
     const dur = cur ? a!.duration || 0 : 0;
     const t = cur ? a!.currentTime || 0 : 0;
     const pct = dur ? (t / dur) * 100 : 0;
@@ -235,6 +266,8 @@ try {
             title: player.dataset.title || '',
             work: player.dataset.work || player.dataset.title || '',
             clip: player.dataset.clip || undefined,
+            href: location.pathname,                        // the page this piece lives on
+            waveMini: player.dataset.waveMini || '',        // sparse bars for the mini-player
           },
         };
         b.playBtn.addEventListener('click', () => {

@@ -6,19 +6,15 @@ import { getCollection, render } from 'astro:content';
 
 export async function getStaticPaths() {
   const works = await getCollection('works', ({ data }) => !data.draft);
-  // Same order as the works index (sortOrder descending); each page links to the next
-  // work in that sequence, wrapping at the end, so the site walks like gallery rooms.
-  const sorted = works.sort((a, b) => (b.data.sortOrder ?? 0) - (a.data.sortOrder ?? 0));
-  return sorted.map((work, i) => ({
+  return works.map((work) => ({
     params: { slug: work.id },
-    props: { work, next: sorted[(i + 1) % sorted.length] },
+    props: { work },
   }));
 }
 
 import { asset } from '../../lib/asset';
 
-const { work, next } = Astro.props;
-const base = import.meta.env.BASE_URL;
+const { work } = Astro.props;
 const { Content } = await render(work);
 const siteUrl = Astro.site?.origin ?? 'https://noahberrie.com';
 
@@ -75,7 +71,6 @@ const jsonLd = {
                     : `${work.data.title} — documentation image ${i + 1}`}
                   loading={i === 0 ? "eager" : "lazy"}
                   fetchpriority={i === 0 ? "high" : undefined}
-                  transition:name={i === 0 ? `work-img-${work.id}` : undefined}
                 />
               ))}
             </div>
@@ -253,12 +248,6 @@ const jsonLd = {
           </div>
         )}
 
-        {next && next.id !== work.id && (
-          <a class="work-next" href={`${base}works/${next.id}/`}>
-            <span class="work-next-label">Next</span>
-            <span class="work-next-title">{next.data.title.toUpperCase()} →</span>
-          </a>
-        )}
       </div>
     </div>
   </article>

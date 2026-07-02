@@ -8,29 +8,39 @@ import Base from '../layouts/Base.astro';
   path="/404"
 >
   <div class="notfound-page">
-    {/* A flat 1px line — the site's waveform at rest. It ripples under the cursor
-        (or a tap) and springs back to silence. Static under prefers-reduced-motion. */}
+    {/* A flat 1px line across the page — the site's waveform at rest. It ripples under
+        the cursor (or a tap) and springs back to silence; big swings overlap the text
+        rather than clipping. Static under prefers-reduced-motion. */}
+    <p class="notfound-text">Page not found</p>
     <canvas class="notfound-wave" aria-hidden="true"></canvas>
-    <p class="notfound-text">Page not found.</p>
     <a href="/">View works</a>
   </div>
 
   <style>
     .notfound-page {
       min-height: 60vh;
-      padding-top: 18vh;
+      padding-top: 22vh;
       text-align: center;
     }
-    .notfound-wave {
-      display: block;
-      width: min(520px, 82%);
-      height: 72px;
-      margin: 0 auto 2.25rem;
-      touch-action: none;
-    }
     .notfound-text {
-      color: var(--color-meta);
-      margin-bottom: 1.5rem;
+      position: relative;
+      z-index: 1;
+      margin: 0;
+      color: #000;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    /* Tall canvas with negative margins: the resting line sits between the two texts,
+       but a hard ripple has ~130px of headroom either way and rides OVER the words
+       (z-index above, pointer-events off so the link stays clickable). */
+    .notfound-wave {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+      display: block;
+      width: 100%;
+      height: 320px;
+      margin: -128px auto;
     }
   </style>
 
@@ -123,15 +133,23 @@ import Base from '../layouts/Base.astro';
 
       if (!reduced) {
         let lastY: number | null = null;
-        window.addEventListener('pointermove', (e) => {
+        // The canvas is pointer-events: none (so the link under it stays clickable);
+        // both interactions listen on window and gate on proximity to the line.
+        const nearLine = (y: number) => {
           const r = canvas.getBoundingClientRect();
-          if (e.clientY > r.top - 48 && e.clientY < r.bottom + 48) {
+          const mid = r.top + r.height / 2;
+          return Math.abs(y - mid) < 90;
+        };
+        window.addEventListener('pointermove', (e) => {
+          if (nearLine(e.clientY)) {
             const dy = lastY === null ? 3 : e.clientY - lastY;
-            poke(e.clientX, Math.max(-6, Math.min(6, dy * 0.9 || 1.5)));
+            poke(e.clientX, Math.max(-8, Math.min(8, dy * 1.1 || 1.5)));
           }
           lastY = e.clientY;
         }, { signal });
-        canvas.addEventListener('pointerdown', (e) => poke(e.clientX, 9), { signal });
+        window.addEventListener('pointerdown', (e) => {
+          if (nearLine(e.clientY)) poke(e.clientX, 12);
+        }, { signal });
       }
       window.addEventListener('resize', size, { signal });
       size();
