@@ -15,8 +15,9 @@ const { post } = Astro.props;
 const siteUrl = Astro.site?.origin ?? 'https://noahberrie.com';
 const base = import.meta.env.BASE_URL;
 
-// Social/SEO image: prefer the hero, then the first body image, then the index
-// thumb, so heroless studies still get a representative card, not the site default.
+// Social/SEO image: prefer the hero, then the first frontmatter image (none of the
+// current studies set `images`), then the index thumb, so heroless studies still get
+// a representative card, not the site default.
 const ogImage = post.data.hero || post.data.images[0] || post.data.thumb;
 const jsonLd = {
   "@context": "https://schema.org",

@@ -1,9 +1,8 @@
 ---
 title: "Micro Software"
-subtitle: "Four non-music projects."
-summary: "A roundup of the non-music software I made this month: a violin practice app I use every day, a StreetEasy tracker for apartment hunting, a gallery website, and the site you're reading this on."
+subtitle: "Four non-music projects"
+summary: "A roundup of the non-music software I've made recently: a violin practice app I use every day, a StreetEasy tracker for apartment hunting, a gallery website, and the site you're reading this on."
 updated: "June 2026"
-categories: ["Patches & UI", "Data & ML"]
 sortOrder: 35
 tags: ["software", "web", "python"]
 stack: ["Vanilla JS", "Web Audio", "Python", "SQLite", "React", "Cloudflare Workers", "Astro"]
@@ -41,7 +40,7 @@ The app handles all the bookkeeping around each session by tracking the week's k
 
 The drone received the most attention. It's built to be harmonically rich (additive partials tuned to just-intonation ratios, mixing tonic, fifth, and octave like a real tanpura) so I can lock my tuning against it and hear the overtones and beating clearly for intonation work.
 
-Plain HTML, CSS, and JavaScript for the build. No framework, no backend. For a one-person tool anything heavier would be more to maintain. Everything lives on the phone – sessions, recordings, and notes all save locally – so that it runs fully offline on a music stand.
+Plain HTML, CSS, and JavaScript for the build. No framework, no backend. For a one-person tool anything heavier would be more to maintain. Everything lives on the phone — sessions, recordings, and notes all save locally — so that it runs fully offline on a music stand.
 
 I had a working version in an afternoon and let daily use shape the rest: cutting the onboarding flow, fixing timezone bugs in the streak, teaching it to remember my tempo for each key, and shrinking every screen so all the information fits without scrolling. It now feels like a properly installed app, one that I use every day.
 
@@ -104,7 +103,7 @@ A pipeline board moves a place from saved to texted to toured to offer; a "teach
   <figcaption>Every listing scored 0–100 and deduped, with the features it matched read straight out of the description.</figcaption>
 </figure>
 
-<div class="log-duo">
+<div class="log-duo log-duo--framed">
   <figure>
     <img src="/images/log/streeteasy-scraper/board.jpg" alt="A Kanban pipeline board with Saved, Texted, Received videos, and Toured columns of listing cards." loading="lazy" decoding="async" />
     <figcaption>Drag a place from saved to texted to toured to offer.</figcaption>
@@ -115,7 +114,7 @@ A pipeline board moves a place from saved to texted to toured to offer; a "teach
   </figure>
 </div>
 
-<div class="log-duo">
+<div class="log-duo log-duo--framed">
   <figure>
     <img src="/images/log/streeteasy-scraper/vault.jpg" alt="The address vault: saved buildings with NYC records, notes, and any live listings at that address." loading="lazy" decoding="async" />
     <figcaption>The address vault of buildings I love, in case something opens up.</figcaption>
@@ -151,14 +150,14 @@ A lightweight website for an art gallery in London that the staff can update wit
   <figcaption>Jelly Green's <em>Conflagration ii</em>, with its installation views. Every show is one entry in a single JSON file.</figcaption>
 </figure>
 
-<div class="log-duo">
+<div class="log-duo log-duo--framed">
   <figure>
     <img src="/images/log/incubator-site/exhibition-yuma-radne.jpg" alt="An exhibition page: Yuma Radne's Playing with Hands, a colorful figurative painting of hands meeting." loading="lazy" decoding="async" />
     <figcaption>Yuma Radne, <em>Playing with Hands</em>.</figcaption>
   </figure>
   <figure>
     <img src="/images/log/incubator-site/exhibition-harry-grundy.jpg" alt="An exhibition page: Harry Grundy's FULL PELT, a sculptural work in wood and green panels." loading="lazy" decoding="async" />
-    <figcaption>Harry Grundy, <em>FULL PELT</em> – one of 61 shows, each its own page.</figcaption>
+    <figcaption>Harry Grundy, <em>FULL PELT</em> — one of 61 shows, each its own page.</figcaption>
   </figure>
 </div>
 
@@ -183,18 +182,18 @@ This is my art portfolio and engineering log. I work primarily with sound, so I'
 <details class="entry">
 <summary><span class="entry-more">more</span><span class="entry-less">show less</span><span class="entry-chev" aria-hidden="true">▾</span></summary>
 
-<div class="log-duo">
+<div class="log-duo log-duo--framed">
   <figure>
     <img src="/images/log/personal-website/home.jpg" alt="The works index: a single art piece per row, a large installation photo." loading="lazy" decoding="async" />
     <figcaption>The works index.</figcaption>
   </figure>
   <figure>
     <img src="/images/log/personal-website/work-interval.jpg" alt="A work page, Interval II, mid-scroll: the installation shot and a detail shot side by side as the gallery pans." loading="lazy" decoding="async" />
-    <figcaption>A work page – the image gallery pans as you scroll.</figcaption>
+    <figcaption>A work page — the image gallery pans as you scroll.</figcaption>
   </figure>
 </div>
 
-<div class="log-duo">
+<div class="log-duo log-duo--framed">
   <figure>
     <img src="/images/log/personal-website/video.jpg" alt="A work page with the custom video player: a play button over the piece's images." loading="lazy" decoding="async" />
     <figcaption>A custom player for the performance videos.</figcaption>
@@ -245,21 +244,23 @@ This is my art portfolio and engineering log. I work primarily with sound, so I'
   .log-detail-body details.entry[open] .entry-less { display: inline; }
   .log-detail-body details.entry .entry-chev { font-size: 0.85em; line-height: 1; transition: transform 0.18s ease; }
   .log-detail-body details.entry[open] .entry-chev { transform: rotate(180deg); }
-  .log-detail-body hr {
+  .log-study-micro-software hr {
     border: 0;
     height: 1px;
     background: var(--color-rule);
     transform: scaleY(0.5);                /* match the header rule: a true half-pixel hairline */
     margin: 2.75rem 0;
   }
-  .log-panel .log-detail-body hr { margin-left: -2.5rem; }
+  .log-panel .log-study-micro-software hr { margin-left: -2.5rem; }
 
   /* Faux browser window around the desktop screenshots (matches the TutorDash study):
-     a chrome bar in the figure's top padding with traffic-light dots. */
+     a chrome bar in the figure's top padding with traffic-light dots. Framing is opt-in
+     per figure (.winshot / .log-duo--framed) because markdown <style> is global — a bare
+     .log-duo selector would leak chrome onto other studies' paired figures on the index. */
   .log-detail-body figure.winshot,
-  .log-detail-body .log-duo figure { position: relative; padding-top: 30px; }
+  .log-detail-body .log-duo--framed figure { position: relative; padding-top: 30px; }
   .log-detail-body figure.winshot::before,
-  .log-detail-body .log-duo figure::before {
+  .log-detail-body .log-duo--framed figure::before {
     content: "";
     position: absolute; top: 0; left: 0; right: 0; height: 30px;
     background: var(--color-surface);
@@ -268,7 +269,7 @@ This is my art portfolio and engineering log. I work primarily with sound, so I'
     border-radius: 8px 8px 0 0;
   }
   .log-detail-body figure.winshot::after,
-  .log-detail-body .log-duo figure::after {
+  .log-detail-body .log-duo--framed figure::after {
     content: "";
     position: absolute; top: 11px; left: 12px; width: 38px; height: 8px;
     background:
@@ -277,7 +278,7 @@ This is my art portfolio and engineering log. I work primarily with sound, so I'
       radial-gradient(circle at 34px 4px, #28c840 3.5px, transparent 4px);
   }
   .log-detail-body figure.winshot img,
-  .log-detail-body .log-duo figure img {
+  .log-detail-body .log-duo--framed figure img {
     border: 1px solid var(--color-border);
     border-radius: 0 0 8px 8px;
   }

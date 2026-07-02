@@ -3,7 +3,6 @@ title: "North Sea"
 subtitle: "A buoy to record the movement of the sea; stepper motors to replay it"
 summary: "A self-contained buoy logs ocean motion at 50 Hz for 25 hours; an offline pipeline reconstructs surge, sway and heave; and three belt-driven carriages replay that motion across a field of tuned strings."
 updated: "March 2026"
-categories: ["Hardware & PCBs", "Data & ML"]
 sortOrder: 25
 tags: ["hardware", "firmware", "sensors", "dsp"]
 stack: ["Raspberry Pi Pico 2", "MicroPython", "BNO085 IMU", "NumPy / SciPy", "TMC2209 steppers", "EasyEDA PCB"]
@@ -18,7 +17,7 @@ draft: false
 North Sea started off as a very simple idea. I wanted to translate the motion of the sea into three axes of linear motion that would pluck strings. I looked at the complex movement of the waves and wondered what that motion would sound like.
 
 <figure>
-  <img src="/images/log/north-sea/north-sea-margate.jpg" alt="The surface of the North Sea from above in Margate, low sun catching waves." loading="lazy" decoding="async" />
+  <img src="/images/log/north-sea/north-sea-margate.jpg" alt="A choppy sea surface seen from above, low sun glinting off the wave crests." loading="lazy" decoding="async" />
   <figcaption>The surface of the North Sea from above in Margate, low sun catching waves.</figcaption>
 </figure>
 
@@ -74,11 +73,11 @@ A second Pico 2 streams that 10 Hz motion to three carriages over a custom board
 
 <div class="log-duo">
   <figure>
-    <img src="/images/log/north-sea/motor-breadboard.jpg" alt="A breadboard prototype with a Pico, a microSD module, driver breakouts and a tangle of jumper wires." loading="lazy" decoding="async" />
+    <img src="/images/log/north-sea/motor-breadboard.jpg" alt="A breadboard holding a Raspberry Pi Pico, a microSD module, and stepper-driver breakouts, joined by jumper wires." loading="lazy" decoding="async" />
     <figcaption>A breadboard prototype with a Pico, a microSD module, driver breakouts and a tangle of jumper wires.</figcaption>
   </figure>
   <figure>
-    <img src="/images/log/north-sea/pcb-v1.jpg" alt="The fabricated 'North Sea v1' PCB held in hand: a Pico 2, three stepper-driver channels labelled Motor 1 to 3, a buck converter and a microSD header." loading="lazy" decoding="async" />
+    <img src="/images/log/north-sea/pcb-v1.jpg" alt="The fabricated 'North Sea v1' PCB held in hand: a Pico 2, three stepper-driver channels labeled Motor 1 to 3, a buck converter and a microSD header." loading="lazy" decoding="async" />
     <figcaption>The PCB: a Pico 2, three stepper channels (Motor 1–3), a 24 V buck and a microSD header.</figcaption>
   </figure>
 </div>

@@ -4,10 +4,11 @@ import LogArticle from '../../components/LogArticle.astro';
 import { getCollection } from 'astro:content';
 import { asset } from '../../lib/asset';
 
-// Menu order is curated: Violin Practice, SuperCollider, ANTIPHON, Suspension, North Sea. Anything
-// not listed falls back to reverse-chronological by `updated` (free-text like "May 2026", parsed by
-// Date.parse; unparseable sorts last), ties broken by sortOrder.
-const MENU_ORDER = ['violin-practice-app', 'violin-electronics-solo', 'antiphon', 'suspension', 'north-sea'];
+// Menu order is curated: Micro Software (fronted by the violin practice app), SuperCollider,
+// ANTIPHON, Suspension, North Sea. Anything not listed falls back to reverse-chronological by
+// `updated` (free-text like "May 2026", parsed by Date.parse; unparseable sorts last), ties
+// broken by sortOrder.
+const MENU_ORDER = ['micro-software', 'violin-electronics-solo', 'antiphon', 'suspension', 'north-sea'];
 const menuRank = (id: string) => {
   const i = MENU_ORDER.indexOf(id);
   return i === -1 ? Infinity : i;
@@ -60,8 +61,9 @@ const hoverLight = (i: number) =>
 
 <Base
   title="Log"
-  description="Engineering case-studies by Noah Berrie — the boards, firmware, DSP, and software behind the installations and instruments, told build-first."
+  description="Engineering case studies by Noah Berrie — the boards, firmware, DSP, and software behind the installations and instruments, told build-first."
   path="/log/"
+  image="/images/log/antiphon/explorer-hero.png"
   noindex={true}
 >
   <div class="log-page">
@@ -83,7 +85,7 @@ const hoverLight = (i: number) =>
           </div>
           <div class="log-title-box">
             <h1 class="log-header-title">Log</h1>
-            <p class="log-standfirst">Build notes and case-studies.</p>
+            <p class="log-standfirst">Build notes and case studies.</p>
           </div>
         </div>
 
@@ -155,7 +157,11 @@ const hoverLight = (i: number) =>
             <div class="log-stage" aria-hidden="true"></div>
             {posts.map((post) => (
               <article class="log-detail log-panel" data-key={post.id} tabindex="-1">
-                <LogArticle post={post} titleAs="h2" />
+                <LogArticle post={post} titleAs="h2">
+                  {/* The panel's counterpart to the standalone page's "← Log" eyebrow: a real
+                      close affordance (the click handler lives in the two-pane script below). */}
+                  <p slot="eyebrow" class="log-detail-eyebrow"><button class="log-panel-close" type="button">✕ Close</button></p>
+                </LogArticle>
               </article>
             ))}
           </div>
@@ -176,13 +182,32 @@ const hoverLight = (i: number) =>
       var els = document.querySelectorAll('[data-box]');
       if (!els.length) return;
       var n = schedule.length;
-      var perm = Array.from({ length: n }, function (_, i) { return i; });
-      for (var i = n - 1; i > 0; i--) {                       // Fisher–Yates
-        var j = Math.floor(Math.random() * (i + 1));
-        var t = perm[i]; perm[i] = perm[j]; perm[j] = t;
+      function deal() {
+        var perm = Array.from({ length: n }, function (_, i) { return i; });
+        for (var i = n - 1; i > 0; i--) {                     // Fisher–Yates
+          var j = Math.floor(Math.random() * (i + 1));
+          var t = perm[i]; perm[i] = perm[j]; perm[j] = t;
+        }
+        els.forEach(function (el) {
+          el.style.setProperty('--start', schedule[perm[+el.dataset.box]] + 's');
+        });
       }
-      els.forEach(function (el) {
-        el.style.setProperty('--start', schedule[perm[+el.dataset.box]] + 's');
+      deal();
+
+      // Easter egg: click the LOG box and the pen draws the page again — same schedule,
+      // new order. Restart = pin every animated element to animation:none, flush styles,
+      // then hand control back to the stylesheet so the animations re-run from 0 with the
+      // freshly dealt --start delays. Skipped under prefers-reduced-motion (the grid
+      // renders finished there, so a replay would do nothing but re-deal).
+      var logBox = document.querySelector('.log-aside .log-title-box');
+      if (!logBox) return;
+      logBox.addEventListener('click', function () {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        deal();
+        var anim = document.querySelectorAll('.ld-h, .ld-v, .log-title-box, .log-card-link');
+        anim.forEach(function (el) { el.style.animation = 'none'; });
+        void document.body.offsetWidth;
+        anim.forEach(function (el) { el.style.animation = ''; });
       });
     })();
   </script>
@@ -263,6 +288,7 @@ const hoverLight = (i: number) =>
       };
 
       const closePanel = () => {
+        const closedKey = openKey;
         if (openKey && panels.has(openKey)) {
           const panel = panels.get(openKey)!;
           panel.classList.remove('is-shown');    // fade the study out (opacity), then hide it
@@ -276,7 +302,21 @@ const hoverLight = (i: number) =>
         // the last study's floating image until the next hover.
         if (activeImg && imgs.has(activeImg)) imgs.get(activeImg)!.classList.remove('is-active');
         activeImg = null;
+        // Hand focus back to the card that opened the study, so a keyboard user isn't
+        // stranded inside a hidden panel.
+        if (closedKey) {
+          cards.find((c) => c.getAttribute('data-key') === closedKey)
+            ?.querySelector<HTMLAnchorElement>('.log-card-link')?.focus();
+        }
       };
+
+      // Escape closes the open study — unless a lightbox is up, which owns Escape
+      // (it sits above the panel; closing both at once would feel like a glitch).
+      document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape' || openKey === null) return;
+        if (document.querySelector('.log-lightbox, .iphone-lightbox')) return;
+        closePanel();
+      });
 
       cards.forEach((card) => {
         const key = card.getAttribute('data-key');

@@ -53,7 +53,6 @@ const log = defineCollection({
     subtitle: z.string().optional(),           // optional tagline rendered under the title
     summary: z.string(),                       // → meta description (Base truncates to 155)
     updated: z.string().optional(),            // display only — NOT used for sort
-    categories: z.array(z.enum(['Patches & UI', 'Hardware & PCBs', 'Data & ML'])).default([]), // index filter facets; a study can sit under more than one
     draft: z.boolean().default(false),         // visibility gate (same semantics as works)
     sortOrder: z.number().default(0),          // portfolio order, sorted descending
     tags: z.array(z.string()).default([]),     // hardware / firmware / dsp / ml / web

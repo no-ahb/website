@@ -100,6 +100,9 @@ a:focus { opacity: 1; }
 .site-main {
   margin-left: var(--nav-width);
   flex: 1;
+  /* Shrinkable below content min-width, so wide unbreakable content (long code lines)
+     scrolls inside its own overflow container instead of widening the page. */
+  min-width: 0;
   padding: 2rem 3rem 3rem 3rem;
 }
 
@@ -1160,11 +1163,13 @@ hr {
   border: 1px solid var(--color-border);
   background: var(--color-bg);
   opacity: 0;
-  transform: translate(-50%, -50%) rotate(var(--rot, 0deg));
-  transition: opacity 0.4s ease;
+  /* Rests 6px low while hidden so the fade-in reads as a print settling onto the desk
+     (and the outgoing image lifts away as it loses .is-active). */
+  transform: translate(-50%, calc(-50% + 6px)) rotate(var(--rot, 0deg));
+  transition: opacity 0.4s ease, transform 0.5s cubic-bezier(0.22, 0.61, 0.36, 1);
   pointer-events: none;
 }
-.log-stage-img.is-active { opacity: 1; }
+.log-stage-img.is-active { opacity: 1; transform: translate(-50%, -50%) rotate(var(--rot, 0deg)); }
 
 /* Inline study panels — pre-rendered, one shown at a time (desktop only). A study fades IN on open
    exactly the way it fades OUT on close: one opacity transition, no per-block movement. */
@@ -1272,7 +1277,11 @@ hr {
     left: 2rem;
     width: calc(var(--nav-width) + 1rem);
     height: var(--sqh);
-    z-index: 90;                                          /* under the nav (z 100) */
+    /* Above the nav (z 100) so the LOG box can take the replay click — the full-height
+       nav otherwise swallows pointer events over this strip. Safe on /log: the box never
+       overlaps the nav's links and the works dropdown is disabled here (see
+       .site-wrapper:has(.log-page) .nav-works-list). */
+    z-index: 101;
   }
   .log-aside .log-title-box {
     height: 100%;
@@ -1282,6 +1291,10 @@ hr {
     flex-direction: column;
     justify-content: center;
     text-align: center;
+    /* Clicking the box replays the pen-draw (see index.astro); keep a double-click
+       from selecting the label instead. */
+    user-select: none;
+    -webkit-user-select: none;
   }
   .log-aside .log-header-title { margin: 0 0 0.5rem; }
   .log-aside .log-standfirst { max-width: none; font-size: 0.92rem; line-height: 1.5; }
@@ -1636,17 +1649,6 @@ video.browser-shot { aspect-ratio: 336 / 185; }
   border: 1px solid var(--color-border);
   border-radius: 0 0 8px 8px;
 }
-
-/* The Micro Software study frames its own side-by-side screenshots with a study-local
-   <style> block, but markdown <style> is global, so its `.log-duo figure` frame leaks
-   onto every other study's paired figures (e.g. North Sea's hardware photos). The
-   per-study `log-study-<id>` body class lets us neutralize that leak everywhere except
-   Micro Software, whose own framing is preserved. Higher specificity wins regardless of
-   source order. */
-.log-detail-body:not(.log-study-micro-software):not(.log-detail-body--framed) .log-duo figure { padding-top: 0; }
-.log-detail-body:not(.log-study-micro-software):not(.log-detail-body--framed) .log-duo figure::before,
-.log-detail-body:not(.log-study-micro-software):not(.log-detail-body--framed) .log-duo figure::after { content: none; }
-.log-detail-body:not(.log-study-micro-software):not(.log-detail-body--framed) .log-duo figure img { border-radius: 0; }
 
 /* Lightbox — a thumbnail shown full-size, floating over the article; click/Esc to dismiss */
 .log-lightbox {
