@@ -141,13 +141,15 @@ const navLinks = [
         <rect x="14" y="4" width="4" height="16" />
       </svg>
     </button>
-    <a class="mini-player-title" href="/"></a>
     <svg class="mini-player-wave" viewBox="0 0 200 32" preserveAspectRatio="none" aria-hidden="true">
       <line class="mpw-axis" x1="0" y1="16" x2="200" y2="16" />
       <path class="mpw-bars" d="" />
-      <line class="mpw-head" x1="0" y1="1" x2="0" y2="31" />
+      <g class="mpw-clip" style="clip-path: inset(0 100% 0 0)"><path class="mpw-fill" d="" /></g>
     </svg>
-    <span class="mini-player-time">0:00</span>
+    <div class="mini-player-foot">
+      <a class="mini-player-title" href="/"></a>
+      <span class="mini-player-time">0:00</span>
+    </div>
   </div>
 
   <script>
@@ -164,7 +166,7 @@ const navLinks = [
     let mp: {
       root: HTMLElement; title: HTMLAnchorElement; toggle: HTMLButtonElement;
       close: HTMLButtonElement; wave: SVGSVGElement;
-      bars: SVGPathElement; head: SVGLineElement;
+      bars: SVGPathElement; fill: SVGPathElement; clipG: SVGGElement;
       time: HTMLElement;
     } | null = null;
     let srcIO: IntersectionObserver | null = null;
@@ -203,13 +205,15 @@ const navLinks = [
       mp.title.textContent = meta.title;
       mp.title.href = meta.href || '/';
       const d = meta.waveMini || '';
-      if (mp.bars.getAttribute('d') !== d) mp.bars.setAttribute('d', d);
+      if (mp.bars.getAttribute('d') !== d) {
+        mp.bars.setAttribute('d', d);
+        mp.fill.setAttribute('d', d);
+      }
       mp.root.classList.toggle('is-playing', nbAudio.playing);
       mp.toggle.setAttribute('aria-label', nbAudio.playing ? 'Pause' : 'Play');
       const dur = a.duration || 0;
-      const x = (dur ? (a.currentTime / dur) * 200 : 0).toFixed(2);
-      mp.head.setAttribute('x1', x);
-      mp.head.setAttribute('x2', x);
+      const pct = dur ? (a.currentTime / dur) * 100 : 0;
+      mp.clipG.style.clipPath = `inset(0 ${100 - pct}% 0 0)`;
       mp.time.textContent = fmt(dur);
     }
 
@@ -232,7 +236,8 @@ const navLinks = [
         close: root.querySelector('.mini-player-close') as HTMLButtonElement,
         wave: root.querySelector('.mini-player-wave') as SVGSVGElement,
         bars: root.querySelector('.mpw-bars') as SVGPathElement,
-        head: root.querySelector('.mpw-head') as SVGLineElement,
+        fill: root.querySelector('.mpw-fill') as SVGPathElement,
+        clipG: root.querySelector('.mpw-clip') as SVGGElement,
         time: root.querySelector('.mini-player-time') as HTMLElement,
       };
       if (nbAudio.meta) mp.root.dataset.watching = nbAudio.meta.src;

@@ -1830,7 +1830,7 @@ video.browser-shot { aspect-ratio: 336 / 185; }
 }
 .mini-player-close:hover { opacity: 0.6; }
 .mini-player-toggle {
-  margin: 0.75rem auto 0;
+  margin: auto;
   flex-shrink: 0;
   width: 30px;
   height: 30px;
@@ -1849,34 +1849,43 @@ video.browser-shot { aspect-ratio: 336 / 185; }
 .mini-player .icon-pause { display: none; }
 .mini-player.is-playing .icon-play { display: none; }
 .mini-player.is-playing .icon-pause { display: block; }
-.mini-player-title {
-  margin: auto 0 0.45rem;
-  font-size: 0.8rem;
-  line-height: 1.3;
-  color: var(--color-title);
-  text-align: left;
-  text-decoration: none;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
 .mini-player-wave {
   display: block;
   width: 100%;
   height: 30px;
   cursor: pointer;
+  margin-top: auto; /* pushes wave + foot to the bottom; toggle centers in the space above */
 }
 .mpw-axis { stroke: var(--color-rule); stroke-width: 1; vector-effect: non-scaling-stroke; }
-.mpw-bars { fill: none; stroke: var(--color-rule); stroke-width: 3.57; } /* = 200 / 56 bars, so they pack flush */
-.mpw-head { stroke: var(--color-accent-works); stroke-width: 1; vector-effect: non-scaling-stroke; }
+/* Slot is 3.57 (200/56); 2.4 stroke → same 2:1 bar:gap as the inline player. Gray
+   fills to black as the piece plays — the one sanctioned gray. */
+.mpw-bars { fill: none; stroke: rgba(0, 0, 0, 0.28); stroke-width: 2.4; }
+.mpw-fill { fill: none; stroke: var(--color-rule); stroke-width: 2.4; }
+.mini-player-foot {
+  margin-top: 0.35rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+.mini-player-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.78rem;
+  line-height: 1.3;
+  color: var(--color-title);
+  text-align: left;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .mini-player-time {
-  margin-top: 0.3rem;
+  flex-shrink: 0;
   font-size: 11px;
   color: #000;
   letter-spacing: 0.03em;
   font-variant-numeric: tabular-nums;
-  text-align: right; /* duration in the square's bottom-right corner */
+  text-align: right; /* duration keeps the bottom-right corner */
 }
 @media (max-width: 768px) {
   .mini-player { right: 12px; bottom: 12px; width: 10rem; }
