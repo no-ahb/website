@@ -1851,18 +1851,20 @@ video.browser-shot { aspect-ratio: 336 / 185; }
 .mini-player.is-playing .icon-pause { display: block; }
 .mini-player-wave {
   display: block;
-  width: 100%;
+  width: 68%;
   height: 30px;
   cursor: pointer;
-  margin-top: auto; /* pushes wave + foot to the bottom; toggle centers in the space above */
+  align-self: flex-end;   /* top of the box, tucked to the right corner (under the ✕) */
+  margin-top: 0.55rem;
 }
 .mpw-axis { stroke: var(--color-rule); stroke-width: 1; vector-effect: non-scaling-stroke; }
-/* Slot is 3.57 (200/56); 2.4 stroke → same 2:1 bar:gap as the inline player. Gray
-   fills to black as the piece plays — the one sanctioned gray. */
-.mpw-bars { fill: none; stroke: rgba(0, 0, 0, 0.28); stroke-width: 2.4; }
-.mpw-fill { fill: none; stroke: var(--color-rule); stroke-width: 2.4; }
+/* 1px screen-width bars, the axis line's exact weight (56 bars over ~150px ≈ 1.6px
+   gaps). Gray fills to black as the piece plays — the one sanctioned gray. */
+.mpw-bars { fill: none; stroke: rgba(0, 0, 0, 0.28); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.mpw-fill { fill: none; stroke: var(--color-rule); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .mini-player-foot {
-  margin-top: 0.35rem;
+  /* Bottom row; the toggle's auto margins center it in the space between the
+     top-right waveform and this row. */
   display: flex;
   align-items: baseline;
   gap: 0.6rem;

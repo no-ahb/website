@@ -36,9 +36,10 @@ const barsPath = (pk: number[], count: number): string => {
   return d;
 };
 const hasWave = !!(peaks && peaks.length > 1);
-const waveD = hasWave ? barsPath(peaks!, 133) : '';   // step 1.5 · stroke 1 → 2:1 bar:gap
-// A chunkier bar set for the mini-player's much narrower box (read from the data
-// attribute; its stroke-width lives in the .mpw-bars rule and must match).
+// Bars render at a fixed 1px screen width (non-scaling stroke, the same weight as the
+// horizontal axis); the count sets the pitch — 280 across a ~700–800px track is a
+// ~1.5–2px gap. The mini box gets a sparser set for its ~150px width.
+const waveD = hasWave ? barsPath(peaks!, 280) : '';
 const waveMiniD = hasWave ? barsPath(peaks!, 56) : '';
 
 function fmtDuration(secs: number): string {
@@ -166,12 +167,14 @@ try {
   .ap-wave-bars {
     fill: none;
     stroke: rgba(0, 0, 0, 0.28);
-    stroke-width: 1; /* slot is 1.5 (200/133) → 2:1 bar:gap */
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke; /* 1px on screen — the axis line's exact weight */
   }
   .ap-wave-fill {
     fill: none;
     stroke: var(--color-rule);
     stroke-width: 1;
+    vector-effect: non-scaling-stroke;
   }
   .ap-wave-clip { transition: clip-path 0.1s linear; }
 

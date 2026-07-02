@@ -132,6 +132,11 @@ const navLinks = [
        audio-manager.ts and keeps playing while pages swap. -->
   <div class="mini-player" id="mini-player" aria-hidden="true">
     <button class="mini-player-close" type="button" aria-label="Dismiss player">✕</button>
+    <svg class="mini-player-wave" viewBox="0 0 200 32" preserveAspectRatio="none" aria-hidden="true">
+      <line class="mpw-axis" x1="0" y1="16" x2="200" y2="16" />
+      <path class="mpw-bars" d="" />
+      <g class="mpw-clip" style="clip-path: inset(0 100% 0 0)"><path class="mpw-fill" d="" /></g>
+    </svg>
     <button class="mini-player-toggle" type="button" aria-label="Pause">
       <svg class="icon-play" width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
         <polygon points="6 3 20 12 6 21 6 3" />
@@ -141,11 +146,6 @@ const navLinks = [
         <rect x="14" y="4" width="4" height="16" />
       </svg>
     </button>
-    <svg class="mini-player-wave" viewBox="0 0 200 32" preserveAspectRatio="none" aria-hidden="true">
-      <line class="mpw-axis" x1="0" y1="16" x2="200" y2="16" />
-      <path class="mpw-bars" d="" />
-      <g class="mpw-clip" style="clip-path: inset(0 100% 0 0)"><path class="mpw-fill" d="" /></g>
-    </svg>
     <div class="mini-player-foot">
       <a class="mini-player-title" href="/"></a>
       <span class="mini-player-time">0:00</span>

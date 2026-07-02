@@ -9,7 +9,7 @@ import { readdirSync, readFileSync, writeFileSync, mkdtempSync, rmSync, mkdirSyn
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
-const BUCKETS = 200;
+const BUCKETS = 400;
 const files = readdirSync('public/audio').filter((f) => f.endsWith('.mp3')).sort();
 const out = {};
 
