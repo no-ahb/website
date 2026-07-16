@@ -4,3 +4,5 @@ dist/
 .DS_Store
 public/compare.html
 .video-originals/
+.env
+.env.*
