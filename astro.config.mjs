@@ -1,5 +1,6 @@
 import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
+import { encryptLogPages } from './scripts/encrypt-log.mjs';
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
@@ -41,6 +42,10 @@ export default defineConfig({
     // contains "/log/" (e.g. /changelog/, /devlog/).
     sitemap({ filter: (page) => !new URL(page).pathname.startsWith('/log/') }),
     stripHtmlComments(),
+    // Must come after stripHtmlComments: /log pages are encrypted behind LOG_PASSWORD
+    // (see scripts/encrypt-log.mjs), and comments have to be stripped from the plaintext
+    // before it is sealed.
+    encryptLogPages(),
   ],
   build: {
     assets: '_assets',
