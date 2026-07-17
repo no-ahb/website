@@ -19,10 +19,6 @@ jobs:
           node-version: 22
       - run: npm ci
       - run: npx astro build
-        env:
-          # Encrypts /log at build time (scripts/encrypt-log.mjs). The build fails if unset,
-          # so a deploy can never ship /log unprotected.
-          LOG_PASSWORD: ${{ secrets.LOG_PASSWORD }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
